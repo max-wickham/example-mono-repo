@@ -1,0 +1,85 @@
+version: "3.9" # optional since v1.27.0
+services:
+  data-ingest-service:
+    build:
+      context: .
+      dockerfile: services/data_ingest_service/dev.Dockerfile
+    volumes:
+      - ./services/data_ingest_service/app:/app
+      - ./schemas:/schemas
+      - ./libs:/libs
+    ports:
+      - "8000:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+     - vpcbr
+
+  device-sim:
+    build:
+      context: .
+      dockerfile: services/device_sim/dev.Dockerfile
+    volumes:
+      - ./services/device_sim/main.py:/main.py
+      - ./services/device_sim/configs:/configs
+      - ./services/device_sim/entrypoint.sh:/entrypoint.sh
+      - ./schemas:/schemas
+      - ./libs:/libs
+    ports:
+      - "8001:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+      - SOCKET_URL=ws://data-ingest-service:8080/ingest_data
+    networks:
+      - vpcbr
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+     - vpcbr
+  redis:
+    image: redis:latest
+    networks:
+     - vpcbr
+    ports:
+      - "6379:6379"
+
+  # minio:
+  #   image: 'minio/minio:latest'
+  #   ports:
+  #     - '9000:9000'
+  #     - '9090:9090'
+  #   environment:
+  #     MINIO_ROOT_USER: 'root'
+  #     MINIO_ROOT_PASSWORD: 'password'
+  #     MINIO_ACCESS_KEY: 'root'
+  #     MINIO_SECRET_KEY: 'password'
+  #   command: minio server /data/minio --console-address ":9090"
+  #   networks:
+  #     vpcbr:
+  #       ipv4_address: 10.5.10.6
+
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.10/16
+         gateway: 10.5.10.1
+        #  aux_addresses:
+        #   minio: 10.5.0.10

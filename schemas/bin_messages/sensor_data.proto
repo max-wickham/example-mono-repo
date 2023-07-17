@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-
-message SensorReadingPacket {
-    double time_s = 1;
-    repeated double data = 2;
-}

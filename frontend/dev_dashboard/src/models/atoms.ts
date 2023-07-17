@@ -1,5 +1,5 @@
 import { atom } from "recoil"
-
+import {RecordingState} from "../utils/BluetoothManager"
 
 export const readingsAtom = atom<number[]>({
     key : 'readingsAtom',
@@ -15,5 +15,11 @@ export const connectedDeviceAtom = atom<{
         device_name : 'None',
         connected : false
     }
+},
+);
+
+export const recordingStateAtom = atom<RecordingState>({
+    key: 'recordingStateAtom', // unique ID (with respect to other atoms/selectors)
+    default: RecordingState.RSNotRecording
 },
 );

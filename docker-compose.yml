@@ -1,13 +1,14 @@
 version: "3.9" # optional since v1.27.0
 services:
-  data-ingest-service:
+
+  account-service:
     build:
       context: .
-      dockerfile: services/data_ingest_service/dev.Dockerfile
+      dockerfile: backend/client_services/account_service/dev.Dockerfile
     volumes:
-      - ./services/data_ingest_service/app:/app
-      - ./schemas:/schemas
-      - ./libs:/libs
+      - ./backend/client_services/account_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
     ports:
       - "8000:8080"
     environment:
@@ -19,18 +20,16 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
     networks:
-     - vpcbr
+      - vpcbr
 
-  device-sim:
+  recording-upload-service:
     build:
       context: .
-      dockerfile: services/device_sim/dev.Dockerfile
+      dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
     volumes:
-      - ./services/device_sim/main.py:/main.py
-      - ./services/device_sim/configs:/configs
-      - ./services/device_sim/entrypoint.sh:/entrypoint.sh
-      - ./schemas:/schemas
-      - ./libs:/libs
+      - ./backend/client_services/recording_upload_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
     ports:
       - "8001:8080"
     environment:
@@ -41,9 +40,28 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
-      - SOCKET_URL=ws://data-ingest-service:8080/ingest_data
     networks:
       - vpcbr
+
+  dev-dashboard:
+    build:
+      context: ./frontend/dev_dashboard
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./src:/src
+    ports:
+      - "3000:3000"
+    environment:
+      - secret=secret
+      - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - token_url=http://localhost:8000/token
+      - mongo_database_url=mongodb://mongo:27017/
+      - ENV=DEV
+      - REDIS_URL=redis://redis
+      - API_KEY=test
+      - PYTHONUNBUFFERED=1
+    networks:
+     - vpcbr
 
   mongo:
     image: mongo:latest
@@ -58,20 +76,22 @@ services:
     ports:
       - "6379:6379"
 
-  # minio:
-  #   image: 'minio/minio:latest'
-  #   ports:
-  #     - '9000:9000'
-  #     - '9090:9090'
-  #   environment:
-  #     MINIO_ROOT_USER: 'root'
-  #     MINIO_ROOT_PASSWORD: 'password'
-  #     MINIO_ACCESS_KEY: 'root'
-  #     MINIO_SECRET_KEY: 'password'
-  #   command: minio server /data/minio --console-address ":9090"
-  #   networks:
-  #     vpcbr:
-  #       ipv4_address: 10.5.10.6
+  minio:
+    image: 'minio/minio:latest'
+    volumes:
+      - ./volumes/minio_data:/data
+    ports:
+      - '9000:9000'
+      - '9090:9090'
+    environment:
+      MINIO_ROOT_USER: 'root'
+      MINIO_ROOT_PASSWORD: 'password'
+      MINIO_ACCESS_KEY: 'root'
+      MINIO_SECRET_KEY: 'password'
+    command: minio server /data/minio --console-address ":9090"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.10.6
 
 
 networks:

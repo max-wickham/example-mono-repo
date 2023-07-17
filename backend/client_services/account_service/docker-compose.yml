@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: ../
+      dockerfile: ./company_account_service/Dockerfile
+    ports:
+      - "8000:8080"
+    environment:
+      - secret=secret
+      - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - token_url=http:localhost:8000/token
+      - mongo_database_url=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERYBROKERURL=redis://redis:6379
+      - CELERYRESULTBACKEND=redis://redis:6379
+      - API_KEY=test
+      - PYTHONUNBUFFERED=1
+
+  mongo:
+    image : mongo:latest
+    ports:
+      - "27017:27017"

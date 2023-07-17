@@ -1,0 +1,36 @@
+[MAIN]
+
+
+load-plugins=
+    pylint.extensions.check_elif,
+    pylint.extensions.bad_builtin,
+    pylint.extensions.docparams,
+    pylint.extensions.for_any_all,
+    pylint.extensions.set_membership,
+    pylint.extensions.code_style,
+    pylint.extensions.overlapping_exceptions,
+    pylint.extensions.typing,
+    pylint.extensions.redefined_variable_type,
+    pylint.extensions.comparison_placement,
+
+init-hook='import sys; sys.path.append("./")'
+init-hook='import sys; sys.path.append("../")'
+init-hook='import sys; sys.path.append("../../")'
+
+# ; init-hook="import sys; sys.path.append("/$PWD/");"
+# # init-hook='import sys; sys.path.append("/home/max/ManholeMetrics/manholemetrics-backend-mono/")'
+# ; init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()))"
+
+[MESSAGES CONTROL]
+
+disable=
+    attribute-defined-outside-init,
+    invalid-name,
+    missing-docstring,
+    protected-access,
+    too-few-public-methods,
+    # handled by black
+    format,
+    # We anticipate #3512 where it will become optional
+    fixme,
+    cyclic-import,

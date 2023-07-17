@@ -7,18 +7,38 @@
 DataSampler dataSampler = DataSampler();
 DevBluetoothController devBluetoothController = DevBluetoothController();
 
+
+void recordingRequestChanged(RecordingStateRequest state_request){
+  Serial.println('Recording Request Change');
+  Serial.println(state_request);
+  if (state_request == RSRStartRequested){
+    devBluetoothController.setRecordingState(RSInProgress);
+  }
+  if (state_request == RSRStopRequested){
+    devBluetoothController.setRecordingState(RSComplete);
+  }
+}
+
+void downloadRequestChanged(DownloadStateRequest state_request){
+  Serial.println('Download Request Change');
+  Serial.println(state_request);
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
   devBluetoothController.setup();
   dataSampler.setup();
+
+  devBluetoothController.setRecordingRequestStateChangedCallback(recordingRequestChanged);
+  devBluetoothController.setDownloadStateRequestChangeCallback(downloadRequestChanged);
 }
 
 void loop() {
   // Serial.println("Step");
   devBluetoothController.run();
   // put your main code here, to run repeatedly:
-  delay(100);
+  // delay(1);
   // delay(2000);
 }
 

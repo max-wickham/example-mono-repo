@@ -12,6 +12,9 @@ from app.api.main import app, s3
 from app.api.exceptions.not_found_exception import AccountNotFoundException
 
 
+
+
+
 @app.post('/recording')
 async def post_recording(
     recording: UploadFile = File(...), token_data: TokenData = Depends(token_authentication)):
@@ -24,5 +27,4 @@ async def post_recording(
     contents = await recording.read()
     file_obj = io.BytesIO(contents)
     s3.upload_fileobj(file_obj, 'recordings', filename)
-
     mongo_account.recording_files.append(filename)

@@ -134,7 +134,6 @@ class DevBluetoothController
     BLECharacteristic *tx_characteristic;
 
     BLEAdvertising *pAdvertising;
-
     // This callback is run when the client requests a recording state change and can be set in the main script
     void (*recording_state_request_change_callback)(RecordingStateRequest state_request);
     // This callback is run when the client requests a download and can be set in the main script
@@ -142,6 +141,8 @@ class DevBluetoothController
 
     RecordingState currentRecordingState = RSNotRecording;
     DownloadState currentDownloadState = DSStopped;
+
+    bool isUploading = false;
 
     void _recording_state_request_callback(
         BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -327,6 +328,12 @@ public:
     }
 
 
+    // TODO set the size to the correct number
+    void uploadData(char featureData[1000]) {
+        // TODO set the download state to the correct value
+        // TODO set the hash to the correct number
+        // set upload to true
+    }
 
     // void setDownloadState(DownloadState state){
     //     // store and send via bluetooth
@@ -336,14 +343,19 @@ public:
 
     void run()
     {
-        static int count = 0;
-        static unsigned long last_reading_update = 0;
-        count += 1;
-        if (millis() > 2000)
-        {
-            current_reading_characteristic->setValue(count);
-            current_reading_characteristic->notify();
+        if (isUploading){
+            // TODO send the window packet to the frontend
+            // TODO check if complete
+            // TODO if complete set the download state to complete
         }
+        // static int count = 0;
+        // static unsigned long last_reading_update = 0;
+        // count += 1;
+        // if (millis() > 2000)
+        // {
+        //     current_reading_characteristic->setValue(count);
+        //     current_reading_characteristic->notify();
+        // }
         // if (millis() - last_reading_update > 100){
         // console.log('sending');
         //     Serial.println(count);

@@ -1,4 +1,7 @@
+#ifndef Data_Manager
+#define Data_Manager
 
+#include <cstring>
 
 struct ReadingPacket {
     float channel[16];
@@ -6,30 +9,35 @@ struct ReadingPacket {
 };
 
 
-const windowSize = 20;
-struct DownloadPacket {
-    char bytes[200];
-}
+const int downloadPacketSize = 100;
+// 1khz for 1 second gives 1000 readings
+const int maxReadings = 1000;
+// 1Kbytes
+const int featureDataSizeBytes = 50000;
+
+char featureData[featureDataSizeBytes];
+int readIndex = 0;
 
 class DataManager {
     private:
-    static const windowsSize = size_t(ReadingPacket);
-
     // TODO set to the correct number (number of windows to download)
-    const numReadPackets = 100;
-    // 32kbytes
-    char data[32000];
-    // 1kbytes
-    char featureData[1000];
-    int writeIndex = 0;
-    int readIndex = 0;
+    char data[sizeof(ReadingPacket) * maxReadings];
 
+    int writeIndex = 0;
     public:
 
-    void addPacket(ReadingPacket packet) {
+    DataManager(){
+        for(int i = 0; i < featureDataSizeBytes; i++){
+            featureData[i] = i;
+        }
+    }
+
+    // Fill with fake data
+
+    void addPacket(ReadingPacket &packet) {
         // write an individual reading
-        data[writeIndex] = packet
-        writeIndex += windowsSize;
+        std::memcpy(data + writeIndex, &packet, sizeof(ReadingPacket));
+        writeIndex += sizeof(ReadingPacket);
     }
 
     void clearRecording(){
@@ -38,11 +46,14 @@ class DataManager {
 
 
     void clearDownload(){
+        Serial.println("featureDataSizeBytes");
+        Serial.println(featureDataSizeBytes);
         readIndex = 0;
+        Serial.println(readIndex);
     }
 
     bool downloadComplete(){
-        return readIndex < numReadPackets;
+        return (readIndex >= featureDataSizeBytes);
     }
 
     void doFeatureExtraction() {
@@ -50,9 +61,26 @@ class DataManager {
         // Should store the feature extracted data in featureData
     }
 
-    DownloadPacket readNextDownloadPacket(){
-        DownloadPacket packet = featureData[readIndex]
-        readIndex += windowsSize;
-        return packet;
+    char* readNextDownloadPacket(){
+        Serial.println(readIndex);
+        Serial.println("Num readings");
+        Serial.println(readIndex);
+        Serial.println(featureData);
+        Serial.println(&(featureData[0]));
+        char* response = &(featureData[0]) + readIndex;
+        Serial.println(readIndex);
+        readIndex += downloadPacketSize;
+        Serial.println(readIndex);
+        return response;
+    }
+
+    int getRecordingHash(){
+        int hash = 0;
+        for (int i = 0; i < 1000; i++){
+            hash += featureData[featureDataSizeBytes];
+        }
+        return hash;
     }
 };
+
+#endif

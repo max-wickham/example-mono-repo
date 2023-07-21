@@ -68,3 +68,30 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+
+
+
+
+
+
+
+createEndpoint("newData", endpoint)
+
+- Send the message identifier
+- Send the id of the service
+- Send a request ID
+- Send the number of bytes
+- Send the bytes
+
+- Send back a response identifier
+- Send the request ID
+- Execute the request with the callback registered
+
+- Repeat until both happy
+    - If don't receive back the request ID in the expected time period then send the request again
+
+    - If the request ID is the last request ID send back the request ID
+
+
+- Also design a response system

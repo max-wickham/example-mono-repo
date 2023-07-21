@@ -14,6 +14,12 @@ from app.api.exceptions.not_found_exception import AccountNotFoundException
 
 
 
+def process_data(data):
+    ...
+
+
+
+
 
 @app.post('/recording')
 async def post_recording(

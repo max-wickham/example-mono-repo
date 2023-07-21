@@ -48,13 +48,13 @@ services:
       context: ./frontend/dev_dashboard
       dockerfile: dev.Dockerfile
     volumes:
-      - ./src:/src
+      - ./frontend/dev_dashboard/src:/app/src
     ports:
       - "3000:3000"
     environment:
       - secret=secret
       - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - token_url=http://localhost:8000/token
+      - token_url=http://localhost:8080/token
       - mongo_database_url=mongodb://mongo:27017/
       - ENV=DEV
       - REDIS_URL=redis://redis

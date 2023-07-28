@@ -1,5 +1,11 @@
 import { atom } from "recoil"
-import {DownloadState, RecordingState} from "../utils/BluetoothManager"
+import {DownloadState, RecordingState} from "../../utils/BluetoothManager"
+
+/*
+Atoms relating to bluetooth state
+*/
+
+
 
 export const readingsAtom = atom<number[]>({
     key : 'readingsAtom',

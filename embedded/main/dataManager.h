@@ -9,11 +9,11 @@ struct ReadingPacket {
 };
 
 
-const int downloadPacketSize = 100;
+const int downloadPacketSize = 400;
 // 1khz for 1 second gives 1000 readings
 const int maxReadings = 1000;
 // 1Kbytes
-const int featureDataSizeBytes = 50000;
+const int featureDataSizeBytes = 10000;
 
 char featureData[featureDataSizeBytes];
 int readIndex = 0;

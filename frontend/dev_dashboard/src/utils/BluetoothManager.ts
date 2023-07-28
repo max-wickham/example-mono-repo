@@ -1,6 +1,6 @@
 import { setRecoil } from "recoil-nexus";
 import { Serializer } from "v8";
-import { downloadStateAtom } from "../models/atoms";
+import { downloadStateAtom } from "../models/atoms/bluetoothAtoms";
 
 export enum RecordingState
 {

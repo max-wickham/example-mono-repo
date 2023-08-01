@@ -3,6 +3,7 @@ Atoms relating to state taken via the backend api
 */
 
 import { atom } from "recoil";
+import { Gestures } from "../../clients/recording";
 
 
 export const authAtom = atom<{
@@ -11,7 +12,13 @@ export const authAtom = atom<{
 }>({
     key : 'authAtom',
     default : {
-        loggedIn: false,
+        loggedIn: true,
         token: null
     }
+})
+
+
+export const gesturesAtom = atom<Gestures|null>({
+    key: 'gesturesAtom',
+    default: null,
 })

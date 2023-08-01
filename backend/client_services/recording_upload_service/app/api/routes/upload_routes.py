@@ -18,7 +18,7 @@ from app.api.exceptions.not_found_exception import AccountNotFoundException
 def process_data(data):
     ...
 
-@app.post('/recording/{gesture_id}')
+@app.post('/recording/{gesture_id}',tags = ["RecordingUploads"])
 async def post_recording(
     gesture_id : str,
     recording: UploadFile = File(...), token_data: TokenData = Depends(token_authentication)):

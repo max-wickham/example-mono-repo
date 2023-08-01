@@ -82,3 +82,4 @@ async def app_init():
 # import routes
 
 from app.api.routes.upload_routes import *
+from app.api.routes.info_routes import *

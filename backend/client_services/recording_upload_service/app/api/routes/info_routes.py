@@ -11,6 +11,8 @@ from app.api.main import app, s3
 from app.api.exceptions.not_found_exception import AccountNotFoundException
 
 
+GestureID = str
+
 class Gestures(BaseModel):
     '''Available gestures and the current state of each gesture'''
 
@@ -19,14 +21,14 @@ class Gestures(BaseModel):
         name : str
         num_recordings: str
         recording_completion_percentage: str
-        gesture_id : str
+        gesture_id : GestureID
 
     # dict of gesture id to gesture info
-    gestures : dict[str,Gesture]
+    gestures : dict[GestureID,Gesture]
 
 MAX_RECORDINGS = 10
 
-@app.get('/gestures', response_model=Gestures)
+@app.get('/gestures', response_model=Gestures, tags=["GestureInfo"])
 async def get_gestures(token_data: TokenData = Depends(token_authentication)) -> Gestures:
     '''Upload a binary recording file of the sensor data'''
     mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))

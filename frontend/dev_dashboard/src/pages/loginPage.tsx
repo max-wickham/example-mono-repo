@@ -11,8 +11,7 @@ import {
     FormGroup,
     Input,
 } from "reactstrap";
-import { isNull } from "util";
-import { authManager } from "../models/managers/authManager";
+import authManager from "../models/managers/authManager";
 
 export const login_page_styles = StyleSheet.create({
     form_styles: {

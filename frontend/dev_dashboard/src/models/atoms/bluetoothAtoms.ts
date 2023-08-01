@@ -6,7 +6,6 @@ Atoms relating to bluetooth state
 */
 
 
-
 export const readingsAtom = atom<number[]>({
     key : 'readingsAtom',
     default : [0]

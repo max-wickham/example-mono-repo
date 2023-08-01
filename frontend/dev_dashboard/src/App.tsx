@@ -1,7 +1,9 @@
 import './App.css';
-import { css } from 'aphrodite';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { BrowserRouter as Router, Route, Link, BrowserRouter, Routes } from "react-router-dom";
+import styled from "styled-components";
+import { StyleSheet, css } from 'aphrodite';
 import {
   useRecoilState,
   useRecoilValue,
@@ -12,40 +14,42 @@ import { getRecoil, setRecoil } from 'recoil-nexus';
 import { DownloadState, MindFeedBluetoothDeviceManager, RecordingState } from './utils/BluetoothManager'
 import { authAtom } from './models/atoms/apiAtoms';
 import { LoginPage } from './pages/loginPage';
+import { Button } from 'reactstrap';
+import authManager from './models/managers/authManager';
 
 
-const device_manager = new MindFeedBluetoothDeviceManager(
-  (device: BluetoothDevice) => {
-    setRecoil(connectedDeviceAtom, {
-      device_name: device.name == undefined ? 'Na' : device.name,
-      connected: device.gatt?.connected == undefined ? false : device.gatt?.connected
-    });
-  },
-  () => {
-    setRecoil(connectedDeviceAtom, {
-      device_name: 'None',
-      connected: false,
-    });
-  }
-);
+// const device_manager = new MindFeedBluetoothDeviceManager(
+//   (device: BluetoothDevice) => {
+//     setRecoil(connectedDeviceAtom, {
+//       device_name: device.name == undefined ? 'Na' : device.name,
+//       connected: device.gatt?.connected == undefined ? false : device.gatt?.connected
+//     });
+//   },
+//   () => {
+//     setRecoil(connectedDeviceAtom, {
+//       device_name: 'None',
+//       connected: false,
+//     });
+//   }
+// );
 
-device_manager.set_on_reading(
-  (reading) => {
-    setRecoil(readingsAtom, [...getRecoil(readingsAtom), reading])
-  }
-)
+// device_manager.set_on_reading(
+//   (reading) => {
+//     setRecoil(readingsAtom, [...getRecoil(readingsAtom), reading])
+//   }
+// )
 
-device_manager.set_on_recording_state_change(
-  (state) => {
-    setRecoil(recordingStateAtom, state);
-  }
-)
+// device_manager.set_on_recording_state_change(
+//   (state) => {
+//     setRecoil(recordingStateAtom, state);
+//   }
+// )
 
-device_manager.set_on_download_state_change(
-  (state) => {
-    setRecoil(downloadStateAtom, state);
-  }
-)
+// device_manager.set_on_download_state_change(
+//   (state) => {
+//     setRecoil(downloadStateAtom, state);
+//   }
+// )
 
 
 // function ConnectToDeviceButton() {
@@ -125,6 +129,57 @@ device_manager.set_on_download_state_change(
 // Login Page
 
 
+// TODO do this differently
+
+const tabBarStyles = StyleSheet.create({
+  tabStyle: {
+    display: "block",
+    textDecoration: "none",
+    padding: "10px",
+    color: "#333",
+    backgroundColor: "#e0e0e0",
+    ":hover": {
+      backgroundColor: "#b0b0b0",
+    },
+  },
+
+  barStyle: {
+    backgroundColor: "#f0f0f0",
+    width: "300px",
+    padding: "20px",
+    height: "100%",
+    position: "fixed",
+  },
+})
+// const TabBarContainer = styled.div`
+//   background-color: #f0f0f0;
+//   width: 200px;
+//   padding: 20px;
+//   height: 100%;
+//   position: fixed;
+// `;
+
+// const Tab = styled(Link)`
+//   display: block;
+//   text-decoration: none;
+//   padding: 10px;
+//   color: #333;
+
+//   &:hover {
+//     background-color: #e0e0e0;
+//   }
+// `;
+
+const TabBarContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <div className={css(tabBarStyles.barStyle)}>{children}</div>
+}
+
+
+const Tab: React.FC<{ to: string, children: React.ReactNode }> = ({ to, children }) => {
+  return <Link to={to} className={css(tabBarStyles.tabStyle)}>{children}</Link>
+}
+
+
 function App() {
   const connectedDeviceAtomState = useRecoilValue(connectedDeviceAtom);
   const readingsAtomVal = useRecoilValue(readingsAtom);
@@ -133,19 +188,29 @@ function App() {
 
   const authAtomVal = useRecoilValue(authAtom)
 
-  if (authAtomVal.loggedIn){
-    return <></>
-  } else{
+  if (authAtomVal.loggedIn) {
+    return <>
+      <Router>
+        <TabBarContainer>
+          <Tab to="/">Home</Tab>
+          <Tab to="/account">Account</Tab>
+
+          <Button onClick={authManager.logout}>Logout</Button>
+        </TabBarContainer>
+        <Routes>
+          <Route path="/">
+            {/* <Home /> */}
+          </Route>
+          <Route path="/account">
+            {/* <Account /> */}
+          </Route>
+        </Routes>
+      </Router>
+    </>
+  } else {
     return <LoginPage></LoginPage>
   }
 
-  // return <>
-  //   <h1>Current Reading: {readingsAtomVal.slice(-1)}</h1>
-  //   <h1>Connected Device Name: {connectedDeviceAtomState == null ? '' : connectedDeviceAtomState.device_name}</h1>
-  //   <h1>Recording State: {RecordingState[recordingStateAtomVal]}</h1>
-  //   <h1>Download State: {DownloadState[downloadStateAtomVal]}</h1>
-  //   <ConnectToDeviceButton></ConnectToDeviceButton>
-  // </>
 }
 
 

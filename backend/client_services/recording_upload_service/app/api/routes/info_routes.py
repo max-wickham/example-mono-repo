@@ -42,7 +42,7 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
     )
     async for gesture in mongo_gestures:
         response_gestures.gestures[str(gesture.id)] = Gestures.Gesture(
-            name=gesture.gesture_name,
+            name=gesture.name,
             num_recordings = 0
                 if gesture.id not in mongo_account.gestures else
                 len(mongo_account.gestures[gesture.id].user_recordings),
@@ -50,7 +50,8 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
                 if gesture.id not in mongo_account.gestures else
                 len(mongo_account.gestures[gesture.id].user_recordings))
                 / MAX_RECORDINGS * 100),
-            gesture_id=gesture.id
+            gesture_id=str(gesture.id)
         )
-    if mongo_account is None:
-        raise AccountNotFoundException(token_data.account_id)
+
+
+    return response_gestures

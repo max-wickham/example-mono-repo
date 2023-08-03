@@ -4,6 +4,7 @@ from typing import NewType
 from beanie import Document
 from beanie.odm.fields import PydanticObjectId
 
+from schemas.mongo_models.training_models import MongoTrainingModel
 from schemas.mongo_models.gesture import MongoAccountGestureRecordings
 
 LabelName = NewType('LabelName',str)
@@ -16,3 +17,4 @@ class MongoAccount(Document):
     email: str
     password_hash : str
     gestures : dict[PydanticObjectId,MongoAccountGestureRecordings] = {}
+    models: list[MongoTrainingModel] = []

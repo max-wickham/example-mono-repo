@@ -8,11 +8,12 @@ LabelName = NewType('LabelName',str)
 
 class MongoGestureInformation(Document):
     '''Information about a gesture'''
-    gesture_name : str
-    gesture_comments : str
-    gesture_video_link : str
+    name : str
+    comments : str
+    video_link : str
+    photo_link: str
 
 class MongoAccountGestureRecordings(Document):
     '''Information about a gesture for a user'''
-    gesture_name : str
+    gesture_id: PydanticObjectId
     user_recordings : list[str]

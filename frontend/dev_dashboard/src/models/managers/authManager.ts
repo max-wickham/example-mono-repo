@@ -8,8 +8,11 @@ import { loginPageUIAtom } from "../atoms/UIAtoms";
 
 export default {
 
-    login: async (email: string, password: string, callback = () => {}) => {
-        try{
+    login: async (email: string, password: string, callback = async () => {}) => {
+        // try{
+            OpenAPIAuth.BASE = 'http://localhost:8000';
+            OpenAPIRecording.BASE = 'http://localhost:8001';
+            console.log('Logging in')
             const response = TokenService.getTokenTokenPost({
                 username: email,
                 password: password,
@@ -27,14 +30,14 @@ export default {
                     incorrectPassword: false,
                 }
             );
-        } catch {
-            setRecoil(loginPageUIAtom,
-                {
-                    incorrectPassword: true
-                }
-            )
-        }
-        callback();
+        // } catch {
+        //     setRecoil(loginPageUIAtom,
+        //         {
+        //             incorrectPassword: true
+        //         }
+        //     )
+        // }
+        await callback();
     },
 
     logout: async () => {

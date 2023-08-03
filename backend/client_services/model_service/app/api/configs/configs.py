@@ -16,12 +16,10 @@ class EnvironmentSettings(BaseSettings):
     S3_URL : str = "http://10.5.10.6:9000"
     S3_KEY : str = "56qHNcBwWOZSULWDUWaFNNm3AUNmU2UglcyHWECQ"
     S3_ID : str = "8NXWLDpiLeuKWhM1XQ5k"
-    CELERY_BROKER_URL : str = 'redis://localhost:6379'
-    CELERY_RESULT_BACKEND : str = "redis://localhost:6379"
 
 environmentSettings = EnvironmentSettings()
 
 class Config:
     '''None secret configs'''
-    application_name : str = "recording-upload-service"
+    application_name : str = "model-service"
     version = "0.0.1"

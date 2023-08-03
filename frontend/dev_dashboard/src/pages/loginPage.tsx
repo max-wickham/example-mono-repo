@@ -12,6 +12,7 @@ import {
     Input,
 } from "reactstrap";
 import authManager from "../models/managers/authManager";
+import recordingsManager from "../models/managers/recordingsManager";
 
 export const login_page_styles = StyleSheet.create({
     form_styles: {
@@ -87,7 +88,6 @@ export const LoginPage = memo(props => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const authAtomState = useRecoilValue(authAtom);
     const loginPageUIAtomState = useRecoilValue(loginPageUIAtom);
     const [model, setModel] = useState(false);
 
@@ -106,18 +106,19 @@ export const LoginPage = memo(props => {
         }
     }
 
-    console.log('Login Page')
+    const login = () => {
+        authManager.login(email, password, async () => {
+            await recordingsManager.getGestures();
+        });
+    }
+
+    console.log('Login Page');
 
 
     return <>
         <Form className={css(login_page_styles.form_styles)} >
             <FormGroup>
-                <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"
-                    onKeyPress={e => {
-                        if (e.key == 'Enter') {
-                            handleLogin();
-                        }
-                    }}></Input>
+                <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"></Input>
                 <Input className={css(login_page_styles.form_items)} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="password"
                     onKeyPress={e => {
                         if (e.key == 'Enter') {
@@ -134,14 +135,7 @@ export const LoginPage = memo(props => {
                 </> : <></>}
             </Row>
             <Row className={css(login_page_styles.row_style)}>
-                <Button id="login_button" className={css(login_page_styles.create_new_style)} onClick={() => {
-                    // auth_manager.get_auth_key(email, password, () => {
-                    //     device_list_manager.get_device_list(); account_manager.get_account_list()
-                    // });
-                    authManager.login(email, password, () => {
-
-                    });
-                }}>Login</Button>
+                <Button id="login_button" className={css(login_page_styles.create_new_style)} onClick={login}>Login</Button>
             </Row>
             {model == false ? null :
                 <Form className={css(login_page_styles.forget_password_form)} >
@@ -157,14 +151,12 @@ export const LoginPage = memo(props => {
                         </Row>
                         <Row id="email_button" className={css(login_page_styles.row_style)}>
                             <Button className={css(login_page_styles.create_new_style)} onClick={() => {
-                                // account_manager.send_password_link(email)
+                                // TODO reset password
                             }}>Send me an email to reset password</Button>
                         </Row>
                     </FormGroup>
                 </Form>
-
             }
-
         </Form>
     </>
 });

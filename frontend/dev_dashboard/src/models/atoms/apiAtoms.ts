@@ -12,7 +12,7 @@ export const authAtom = atom<{
 }>({
     key : 'authAtom',
     default : {
-        loggedIn: true,
+        loggedIn: false,
         token: null
     }
 })

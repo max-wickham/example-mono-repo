@@ -2,14 +2,13 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html
-from celery import Celery
 from starlette.middleware.cors import CORSMiddleware
 import motor
 from beanie import init_beanie
 import boto3
 
+
 from schemas.mongo_models.account_models import MongoAccount
-from schemas.mongo_models.gesture import MongoGestureInformation, MongoAccountGestureRecordings
 from app.api.configs.configs import Config, environmentSettings
 
 
@@ -31,11 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-celery = Celery(__name__)
-celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
-celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
-
 
 if environmentSettings.ENV == 'DEV':
     import os
@@ -82,10 +76,8 @@ async def app_init():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoGestureInformation, MongoAccountGestureRecordings, MongoAccount])
+        document_models=[MongoAccount])
 
 
 # import routes
-
-from app.api.routes.upload_routes import *
-from app.api.routes.info_routes import *
+from app.api.routes.model_routes import *

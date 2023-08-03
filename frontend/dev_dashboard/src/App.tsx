@@ -16,6 +16,7 @@ import { authAtom } from './models/atoms/apiAtoms';
 import { LoginPage } from './pages/loginPage';
 import { Button } from 'reactstrap';
 import authManager from './models/managers/authManager';
+import MainPage from './pages/mainPage';
 
 
 // const device_manager = new MindFeedBluetoothDeviceManager(
@@ -145,10 +146,12 @@ const tabBarStyles = StyleSheet.create({
 
   barStyle: {
     backgroundColor: "#f0f0f0",
-    width: "300px",
+    // width: "300px",
     padding: "20px",
-    height: "100%",
-    position: "fixed",
+    height: "100vh",
+    // position: "fixed",
+    maxWidth: 300,
+    flex: 1
   },
 })
 // const TabBarContainer = styled.div`
@@ -191,20 +194,24 @@ function App() {
   if (authAtomVal.loggedIn) {
     return <>
       <Router>
+        <div style={{display: "flex", height: "100%"}}>
         <TabBarContainer>
           <Tab to="/">Home</Tab>
           <Tab to="/account">Account</Tab>
 
-          <Button onClick={authManager.logout}>Logout</Button>
+          <Button style={{position: 'absolute', bottom: 20}} onClick={authManager.logout}>Logout</Button>
+
         </TabBarContainer>
+        <div style={{flex: 4}}>
         <Routes>
-          <Route path="/">
-            {/* <Home /> */}
+          <Route path="/" element={<MainPage></MainPage>}>
           </Route>
           <Route path="/account">
             {/* <Account /> */}
           </Route>
         </Routes>
+        </div>
+        </div>
       </Router>
     </>
   } else {

@@ -1,5 +1,3 @@
-'''Application configs'''
-
 from pydantic import BaseSettings
 
 class EnvironmentSettings(BaseSettings):
@@ -20,8 +18,3 @@ class EnvironmentSettings(BaseSettings):
     CELERY_RESULT_BACKEND : str = "redis://localhost:6379"
 
 environmentSettings = EnvironmentSettings()
-
-class Config:
-    '''None secret configs'''
-    application_name : str = "model-service"
-    version = "0.0.1"

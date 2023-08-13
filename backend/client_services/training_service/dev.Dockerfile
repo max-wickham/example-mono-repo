@@ -1,13 +1,6 @@
 FROM python:3.10-slim
 
-COPY ./backend/libs /libs
-COPY ./backend/schemas /schemas
-COPY ./backend/client_services/model_service/entrypoint.sh /entrypoint.sh
-COPY ./backend/client_services/model_service/gunicorn.config.py /gunicorn.config.py
-COPY ./backend/client_services/model_service/requirements.txt /requirements.txt
-
-
-# VOLUME ./backend/recording_upload_service/app /app
+COPY ./backend/client_services/training_service/requirements.txt /requirements.txt
 
 RUN apt-get update && \
     apt-get install -y \
@@ -22,7 +15,16 @@ RUN apt-get update && \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m pip install tensorflow
 RUN python3 -m pip install -U celery[redis]
+
+COPY ./backend/libs /libs
+COPY ./backend/schemas /schemas
+COPY ./backend/configs /configs
+COPY ./backend/client_services/training_service/src /src
+COPY ./backend/client_services/training_service/entrypoint.sh /entrypoint.sh
+
+RUN pip install asgiref
 
 RUN chmod +x entrypoint.sh
 

@@ -6,9 +6,13 @@ from starlette.middleware.cors import CORSMiddleware
 import motor
 from beanie import init_beanie
 import boto3
-
+from celery import Celery
 
 from schemas.mongo_models.account_models import MongoAccount
+from schemas.mongo_models.gesture import MongoGestureInformation
+from schemas.mongo_models.training_models import MongoTrainingModel
+from configs.commons import Tasks
+
 from app.api.configs.configs import Config, environmentSettings
 
 
@@ -53,6 +57,13 @@ except Exception:
 # except botocore.errorfactory.BucketAlreadyOwnedByYou:
     ...
 
+# Set up Celery
+
+global_celery = Celery(Tasks.GLOBAL_CELERY_SERVICE)
+global_celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
+global_celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
+
+
 @app.get('/')
 def docs():
     '''Redirect to docs'''
@@ -76,7 +87,7 @@ async def app_init():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoAccount])
+        document_models=[MongoAccount, MongoGestureInformation, MongoTrainingModel])
 
 
 # import routes

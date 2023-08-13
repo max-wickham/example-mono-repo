@@ -54,10 +54,10 @@ else:
 
 # check if bucket already exists
 try:
+    s3.create_bucket(Bucket='processed-recordings')
     s3.create_bucket(Bucket='recordings')
 except Exception:
-# except botocore.errorfactory.BucketAlreadyOwnedByYou:
-    ...
+    print('unable to create bucket')
 
 @app.get('/')
 def docs():
@@ -82,7 +82,7 @@ async def app_init():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoGestureInformation, MongoAccountGestureRecordings, MongoAccount])
+        document_models=[MongoGestureInformation, MongoAccount])
 
 
 # import routes

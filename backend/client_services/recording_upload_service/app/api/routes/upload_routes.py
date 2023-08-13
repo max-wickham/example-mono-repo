@@ -4,7 +4,7 @@ import uuid
 
 from fastapi import File, UploadFile, Depends
 from beanie import PydanticObjectId
-from app.api.tasks.processRecordingTask import process_recording_upload_task
+from app.api.tasks.process_recording_task import process_recording_upload_task
 from schemas.mongo_models.gesture import MongoAccountGestureRecordings, MongoGestureInformation
 
 from schemas.mongo_models.account_models import MongoAccount
@@ -23,20 +23,21 @@ async def post_recording(
     if mongo_account is None:
         raise AccountNotFoundException(token_data.account_id)
 
-    gesture = await MongoGestureInformation.get(gesture_id)
-
+    gesture = await MongoGestureInformation.get(PydanticObjectId(gesture_id))
+    if gesture is None:
+        raise Exception
     # TODO add exception if gesture not found
 
     filename = str(uuid.uuid4())
     contents = await recording.read()
     file_obj = io.BytesIO(contents)
     s3.upload_fileobj(file_obj, 'recordings', filename)
-    if PydanticObjectId(gesture_id) not in mongo_account.gestures:
-        mongo_account.gestures[PydanticObjectId(gesture_id)] = MongoAccountGestureRecordings(
+    if gesture_id not in mongo_account.gestures:
+        mongo_account.gestures[gesture_id] = MongoAccountGestureRecordings(
             gesture_id = gesture.id,
             user_recordings = [],
         )
-    mongo_account.gestures[PydanticObjectId(gesture_id)].user_recordings.append(filename)
+    mongo_account.gestures[gesture_id].user_recordings.append(filename)
 
-    await process_recording_upload_task(mongo_account.id, PydanticObjectId(gesture_id), filename)
     await mongo_account.save()
+    await process_recording_upload_task(mongo_account.id, gesture_id, filename)

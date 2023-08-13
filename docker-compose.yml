@@ -9,6 +9,7 @@ services:
       - ./backend/client_services/account_service/app:/app
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
+      - ./backend/configs:/configs
     ports:
       - "8000:8080"
     environment:
@@ -30,6 +31,7 @@ services:
       - ./backend/client_services/recording_upload_service/app:/app
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
+      - ./backend/configs:/configs
     ports:
       - "8001:8080"
     environment:
@@ -42,6 +44,8 @@ services:
       - REDIS_URL=redis://redis
     networks:
       - vpcbr
+  # TODO worker
+
 
   model-service:
     build:
@@ -51,6 +55,7 @@ services:
       - ./backend/client_services/model_service/app:/app
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
+      - ./backend/configs:/configs
     ports:
       - "8002:8080"
     environment:
@@ -64,29 +69,52 @@ services:
     networks:
       - vpcbr
 
-  dev-dashboard:
+  training-service:
     build:
-      context: ./frontend/dev_dashboard
-      dockerfile: dev.Dockerfile
+      context: .
+      dockerfile: backend/client_services/training_service/dev.Dockerfile
     volumes:
-      - ./frontend/dev_dashboard/src:/app/src
-      - ./frontend/dev_dashboard/package.json:/app/package.json
+      - ./backend/client_services/training_service/src:/src
+      - ./backend/client_services/training_service/entrypoint.sh:/entrypoint.sh
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
     ports:
-      - "3000:3000"
+      - "8003:8080"
     environment:
-      - secret=secret
-      - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - token_url=http://localhost:8080/token
-      - mongo_database_url=mongodb://mongo:27017/
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
       - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
-      - API_KEY=test
-      - PYTHONUNBUFFERED=1
     networks:
-     - vpcbr
-    depends_on:
-      - account-service
-      - recording-upload-service
+      - vpcbr
+
+  # dev-dashboard:
+  #   build:
+  #     context: ./frontend/dev_dashboard
+  #     dockerfile: dev.Dockerfile
+  #   volumes:
+  #     - ./frontend/dev_dashboard/src:/app/src
+  #     - ./frontend/dev_dashboard/package.json:/app/package.json
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - secret=secret
+  #     - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+  #     - token_url=http://localhost:8080/token
+  #     - mongo_database_url=mongodb://mongo:27017/
+  #     - ENV=DEV
+  #     - REDIS_URL=redis://redis
+  #     - API_KEY=test
+  #     - PYTHONUNBUFFERED=1
+  #   networks:
+  #    - vpcbr
+  #   depends_on:
+  #     - account-service
+  #     - recording-upload-service
 
   fake-data-gen:
     build:

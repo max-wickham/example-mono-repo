@@ -23,5 +23,6 @@ class MongoTrainingModel(Document):
     creation_date: int
     name: str
     gestures: list[MongoModelGestureInfo]
-    training_state: TrainingState
+    training_state: TrainingState = TrainingState.NOT_STARTED
     account_id: PydanticObjectId
+    model_file_name: str

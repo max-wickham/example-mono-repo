@@ -13,7 +13,8 @@ class MongoGestureInformation(Document):
     video_link : str
     photo_link: str
 
-class MongoAccountGestureRecordings(Document):
+class MongoAccountGestureRecordings(BaseModel):
     '''Information about a gesture for a user'''
     gesture_id: PydanticObjectId
-    user_recordings : list[str]
+    user_recordings : list[str] = []
+    processed_user_recordings : list[str] = []

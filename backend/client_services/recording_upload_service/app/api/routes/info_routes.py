@@ -26,7 +26,7 @@ class Gestures(BaseModel):
     # dict of gesture id to gesture info
     gestures : dict[GestureID,Gesture]
 
-MAX_RECORDINGS = 10
+MAX_RECORDINGS = 1
 
 @app.get('/gestures', response_model=Gestures, tags=["GestureInfo"])
 async def get_gestures(token_data: TokenData = Depends(token_authentication)) -> Gestures:
@@ -40,15 +40,16 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
     response_gestures = Gestures(
         gestures = {}
     )
+    print(mongo_account.gestures)
     async for gesture in mongo_gestures:
         response_gestures.gestures[str(gesture.id)] = Gestures.Gesture(
             name=gesture.name,
             num_recordings = 0
-                if gesture.id not in mongo_account.gestures else
-                len(mongo_account.gestures[gesture.id].user_recordings),
+                if str(gesture.id) not in mongo_account.gestures.keys() else
+                len(mongo_account.gestures[str(gesture.id)].user_recordings),
             recording_completion_percentage = int((0
-                if gesture.id not in mongo_account.gestures else
-                len(mongo_account.gestures[gesture.id].user_recordings))
+                if str(gesture.id) not in mongo_account.gestures.keys() else
+                len(mongo_account.gestures[str(gesture.id)].user_recordings))
                 / MAX_RECORDINGS * 100),
             gesture_id=str(gesture.id)
         )

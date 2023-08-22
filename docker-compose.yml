@@ -1,96 +1,96 @@
 version: "3.9" # optional since v1.27.0
 services:
 
-  # account-service:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/client_services/account_service/dev.Dockerfile
-  #   volumes:
-  #     - ./backend/client_services/account_service/app:/app
-  #     - ./backend/schemas:/schemas
-  #     - ./backend/libs:/libs
-  #     - ./backend/configs:/configs
-  #   ports:
-  #     - "8000:8080"
-  #   environment:
-  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  #     - TOKEN_URL=http://localhost:8000/token
-  #     - MONGO_DATABASE_URL=mongodb://mongo:27017/
-  #     - ENV=DEV
-  #     - CELERY_BROKER_URL=redis://redis:6379
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379
-  #     - REDIS_URL=redis://redis
-  #   networks:
-  #     - vpcbr
+  account-service:
+    build:
+      context: .
+      dockerfile: backend/client_services/account_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/account_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+    ports:
+      - "8000:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
 
-  # recording-upload-service:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
-  #   volumes:
-  #     - ./backend/client_services/recording_upload_service/app:/app
-  #     - ./backend/schemas:/schemas
-  #     - ./backend/libs:/libs
-  #     - ./backend/configs:/configs
-  #   ports:
-  #     - "8001:8080"
-  #   environment:
-  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  #     - TOKEN_URL=http://localhost:8000/token
-  #     - MONGO_DATABASE_URL=mongodb://mongo:27017/
-  #     - ENV=DEV
-  #     - CELERY_BROKER_URL=redis://redis:6379
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379
-  #     - REDIS_URL=redis://redis
-  #   networks:
-  #     - vpcbr
-  # # TODO worker
+  recording-upload-service:
+    build:
+      context: .
+      dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/recording_upload_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+    ports:
+      - "8001:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
+  # TODO worker
 
 
-  # model-service:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/client_services/model_service/dev.Dockerfile
-  #   volumes:
-  #     - ./backend/client_services/model_service/app:/app
-  #     - ./backend/schemas:/schemas
-  #     - ./backend/libs:/libs
-  #     - ./backend/configs:/configs
-  #   ports:
-  #     - "8002:8080"
-  #   environment:
-  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  #     - TOKEN_URL=http://localhost:8000/token
-  #     - MONGO_DATABASE_URL=mongodb://mongo:27017/
-  #     - ENV=DEV
-  #     - CELERY_BROKER_URL=redis://redis:6379
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379
-  #     - REDIS_URL=redis://redis
-  #   networks:
-  #     - vpcbr
+  model-service:
+    build:
+      context: .
+      dockerfile: backend/client_services/model_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/model_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+    ports:
+      - "8002:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
 
-  # training-service:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/client_services/training_service/dev.Dockerfile
-  #   volumes:
-  #     - ./backend/client_services/training_service/src:/src
-  #     - ./backend/client_services/training_service/entrypoint.sh:/entrypoint.sh
-  #     - ./backend/schemas:/schemas
-  #     - ./backend/libs:/libs
-  #     - ./backend/configs:/configs
-  #   ports:
-  #     - "8003:8080"
-  #   environment:
-  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  #     - TOKEN_URL=http://localhost:8000/token
-  #     - MONGO_DATABASE_URL=mongodb://mongo:27017/
-  #     - ENV=DEV
-  #     - CELERY_BROKER_URL=redis://redis:6379
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379
-  #     - REDIS_URL=redis://redis
-  #   networks:
-  #     - vpcbr
+  training-service:
+    build:
+      context: .
+      dockerfile: backend/client_services/training_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/training_service/src:/src
+      - ./backend/client_services/training_service/entrypoint.sh:/entrypoint.sh
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+    ports:
+      - "8003:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
 
   dev-dashboard:
     build:
@@ -116,57 +116,57 @@ services:
       - account-service
       - recording-upload-service
 
-  # fake-data-gen:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
-  #   volumes:
-  #     - ./backend/dev_services/create_fake_data/main.py:/main.py
-  #     - ./backend/schemas:/schemas
-  #     - ./backend/libs:/libs
-  #   environment:
-  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-  #     - TOKEN_URL=http://localhost:8000/token
-  #     - MONGO_DATABASE_URL=mongodb://mongo:27017/
-  #     - ENV=DEV
-  #     - CELERY_BROKER_URL=redis://redis:6379
-  #     - CELERY_RESULT_BACKEND=redis://redis:6379
-  #     - REDIS_URL=redis://redis
-  #   networks:
-  #     - vpcbr
-  #   depends_on:
-  #     - dev-dashboard
+  fake-data-gen:
+    build:
+      context: .
+      dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
+    volumes:
+      - ./backend/dev_services/create_fake_data/main.py:/main.py
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
+    depends_on:
+      - dev-dashboard
 
 
-  # mongo:
-  #   image: mongo:latest
-  #   ports:
-  #     - "27017:27017"
-  #   networks:
-  #    - vpcbr
-  # redis:
-  #   image: redis:latest
-  #   networks:
-  #    - vpcbr
-  #   ports:
-  #     - "6379:6379"
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+     - vpcbr
+  redis:
+    image: redis:latest
+    networks:
+     - vpcbr
+    ports:
+      - "6379:6379"
 
-  # minio:
-  #   image: 'minio/minio:latest'
-  #   volumes:
-  #     - ./volumes/minio_data:/data
-  #   ports:
-  #     - '9000:9000'
-  #     - '9090:9090'
-  #   environment:
-  #     MINIO_ROOT_USER: 'root'
-  #     MINIO_ROOT_PASSWORD: 'password'
-  #     MINIO_ACCESS_KEY: 'root'
-  #     MINIO_SECRET_KEY: 'password'
-  #   command: minio server /data/minio --console-address ":9090"
-  #   networks:
-  #     vpcbr:
-  #       ipv4_address: 10.5.10.6
+  minio:
+    image: 'minio/minio:latest'
+    volumes:
+      - ./volumes/minio_data:/data
+    ports:
+      - '9000:9000'
+      - '9090:9090'
+    environment:
+      MINIO_ROOT_USER: 'root'
+      MINIO_ROOT_PASSWORD: 'password'
+      MINIO_ACCESS_KEY: 'root'
+      MINIO_SECRET_KEY: 'password'
+    command: minio server /data/minio --console-address ":9090"
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.10.6
 
 
 networks:

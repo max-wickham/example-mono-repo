@@ -11,10 +11,10 @@
 #define RECORDING_STATE_CHARACTERISTIC "1fcdb326-0779-4aed-b50b-d0b21e00c277"
 #define RECORDING_REQUEST_CHARACTERISTIC "765c0ac1-ed04-48af-997a-dc56d3dad788"
 
-#define RECORDING_DOWNLOAD_SERVICE "b44c49de-4751-439c-8ea7-c3bc2516aa3c"
+#define DOWNLOAD_SERVICE "b44c49de-4751-439c-8ea7-c3bc2516aa3c"
 #define DOWNLOAD_REQUEST_CHARACTERISTIC "7f853ef2-ba92-4c0a-bf53-b7dd876f0153"
 #define DOWNLOAD_PROGRESS_CHARACTERISTIC "fddd103d-55d8-4d92-be4f-09c8b56280ef"
-#define RECORDING_HASH_CHARACTERISTIC "f45bb166-b718-4f3e-865c-c9804a06f6b5"
+#define HASH_CHARACTERISTIC "f45bb166-b718-4f3e-865c-c9804a06f6b5"
 #define TX_CHARACTERISTIC "4463d9f3-911d-424f-ab17-af0ebc9ef236"
 
 class DevBluetoothController;
@@ -211,8 +211,6 @@ public:
                 BLECharacteristic::PROPERTY_INDICATE |
                 BLECharacteristic::PROPERTY_NOTIFY);
         BLEDescriptor *current_reading_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2902));
-        int data = 0;
-        // current_reading_characteristic->setValue(0);
         current_reading_characteristic->addDescriptor(current_reading_characteristic_descriptor);
 
         ///// Recording Control service
@@ -241,7 +239,7 @@ public:
         // recording_request_characteristic->(_recording_state_request_callback);
 
         ///// Download Service
-        recording_download_service = pServer->createService(RECORDING_DOWNLOAD_SERVICE);
+        recording_download_service = pServer->createService(DOWNLOAD_SERVICE);
 
         download_request_characteristic = recording_download_service->createCharacteristic(
             DOWNLOAD_REQUEST_CHARACTERISTIC,
@@ -265,7 +263,7 @@ public:
         download_state_progress_characteristic->addDescriptor(download_state_progress_characteristic_descriptor);
 
         recording_hash_characteristic = recording_download_service->createCharacteristic(
-            RECORDING_HASH_CHARACTERISTIC,
+            HASH_CHARACTERISTIC,
             BLECharacteristic::PROPERTY_READ |
                 BLECharacteristic::PROPERTY_WRITE |
                 BLECharacteristic::PROPERTY_BROADCAST |
@@ -291,7 +289,7 @@ public:
         pAdvertising = BLEDevice::getAdvertising();
         pAdvertising->addServiceUUID(READING_SERVICE);
         pAdvertising->addServiceUUID(RECORDING_STATE_SERVICE);
-        pAdvertising->addServiceUUID(RECORDING_DOWNLOAD_SERVICE);
+        pAdvertising->addServiceUUID(DOWNLOAD_SERVICE);
         pAdvertising->setScanResponse(true);
         pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
         pAdvertising->setMinPreferred(0x12);
@@ -394,13 +392,6 @@ public:
 
 void DownloadStateRequestCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 {
-    // std::string value = pCharacteristic->getValue();
-    // if (value.length() > 0)
-    // {
-    //     int intValue = value[0];
-    //     // handle the value written by the client
-    //     //   controller->download_state_request_change_callback(static_cast<DownloadStateRequest>(intValue));
-    // }
 
     std::string value = pCharacteristic->getValue();
     Serial.println("Received Download Request");
@@ -415,23 +406,5 @@ void DownloadStateRequestCallbacks::onWrite(BLECharacteristic *pCharacteristic)
         DownloadStateRequest enumVal = static_cast<DownloadStateRequest>(intValue);
         Serial.println(enumVal);
         callbacks->downloadStateRequestChangeCallback(enumVal);
-    }
-}
-
-void RecordingStateRequestCallbacks::onWrite(BLECharacteristic *pCharacteristic)
-{
-    std::string value = pCharacteristic->getValue();
-    Serial.println("Received Recording Request");
-    Serial.println(value.c_str());
-    Serial.println(value[0]);
-    Serial.println(value.length());
-    if (value.length() > 0)
-    {
-        int intValue = (int)value.at(0);
-        Serial.println(intValue);
-        // handle the value written by the client
-        RecordingStateRequest enumVal = static_cast<RecordingStateRequest>(intValue);
-        Serial.println(enumVal);
-        callbacks->recordingStateRequestChangeCallback(enumVal);
     }
 }

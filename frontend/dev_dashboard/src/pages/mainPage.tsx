@@ -4,6 +4,7 @@ import { useRecoilState } from "recoil";
 import GesturesList from "./components/gesturesList";
 import { createRecordingModalAtom } from "../models/atoms/UIAtoms";
 import CreateRecordingModal from "./components/createRecordingModal";
+import { Button } from "reactstrap";
 
 const mainPageStyles = StyleSheet.create({
     grid: {
@@ -38,3 +39,22 @@ export default memo(() => {
         </div>
     </>
 });
+
+
+
+const Button1 = () => {
+
+    return <>
+        <button>Press Me</button>
+    </>
+
+}
+
+const MainPage = () => {
+
+    return <>
+
+        <h1>Header</h1>
+        <Button1></Button1>
+    </>
+}

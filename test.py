@@ -1,8 +1,10 @@
-with open('/home/max/Downloads/data.bin', 'rb') as f:
-    count = 0
-    # Read the binary file byte by byte
-    while (byte := f.read(1)):
-        count += 1
-        # Convert the byte to an integer and print it
-        print(int.from_bytes(byte, byteorder='little'))
-    print(count)
+import asyncio
+import websockets
+
+async def hello():
+    uri = "ws://165.22.123.190:8005/sample"
+    async with websockets.connect(uri) as websocket:
+        while True:
+            await websocket.send("Hi")
+
+asyncio.get_event_loop().run_until_complete(hello())

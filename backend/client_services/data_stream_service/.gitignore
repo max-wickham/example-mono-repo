@@ -1,0 +1,5 @@
+*.pyc
+*.sqlite
+sendgrid.env
+**/env
+env.env

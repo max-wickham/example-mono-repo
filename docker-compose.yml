@@ -2,6 +2,7 @@ version: "3.9" # optional since v1.27.0
 services:
 
   account-service:
+    profiles: ["backendfull"]
     build:
       context: .
       dockerfile: backend/client_services/account_service/dev.Dockerfile
@@ -23,7 +24,56 @@ services:
     networks:
       - vpcbr
 
+  data-stream-service:
+    profiles : ["backendfull", "stream"]
+    build:
+      context: .
+      dockerfile: backend/client_services/data_stream_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/data_stream_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+      - ./backend/client_services/data_stream_service/test.txt:/test.txt
+    ports:
+      - "8005:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
+
+  live-inference-service:
+    profiles : ["backendfull", "stream"]
+    build:
+      context: .
+      dockerfile: backend/client_services/live_inference_service/dev.Dockerfile
+    volumes:
+      - ./backend/client_services/live_inference_service/app:/app
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./backend/configs:/configs
+      - ./backend/client_services/live_inference_service/test.txt:/test.txt
+    ports:
+      - "8006:8080"
+    environment:
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - TOKEN_URL=http://localhost:8000/token
+      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - ENV=DEV
+      - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_RESULT_BACKEND=redis://redis:6379
+      - REDIS_URL=redis://redis
+    networks:
+      - vpcbr
+
   recording-upload-service:
+    profiles: ["backendfull"]
     build:
       context: .
       dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
@@ -48,6 +98,7 @@ services:
 
 
   model-service:
+    profiles: ["backendfull"]
     build:
       context: .
       dockerfile: backend/client_services/model_service/dev.Dockerfile
@@ -70,6 +121,7 @@ services:
       - vpcbr
 
   training-service:
+    profiles: ["backendfull"]
     build:
       context: .
       dockerfile: backend/client_services/training_service/dev.Dockerfile
@@ -93,6 +145,7 @@ services:
       - vpcbr
 
   dev-dashboard:
+    profiles: ["backendfull"]
     build:
       context: ./frontend/dev_dashboard
       dockerfile: dev.Dockerfile
@@ -117,6 +170,7 @@ services:
       - recording-upload-service
 
   fake-data-gen:
+    profiles: ["backendfull"]
     build:
       context: .
       dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
@@ -139,12 +193,14 @@ services:
 
 
   mongo:
+    profiles: ["backendfull"]
     image: mongo:latest
     ports:
       - "27017:27017"
     networks:
      - vpcbr
   redis:
+    profiles: ["backendfull", "stream"]
     image: redis:latest
     networks:
      - vpcbr
@@ -152,6 +208,7 @@ services:
       - "6379:6379"
 
   minio:
+    profiles: ["backendfull"]
     image: 'minio/minio:latest'
     volumes:
       - ./volumes/minio_data:/data

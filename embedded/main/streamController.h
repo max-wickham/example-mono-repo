@@ -14,7 +14,7 @@
 
 // #define MAX_READINGS 16 * 250 * 4
 #define PACKET_SIZE 33
-#define MAX_READINGS PACKET_SIZE * 100
+#define MAX_READINGS PACKET_SIZE * 600
 
 const std::string serverAddress = "165.22.123.190";
 const int serverPort = 8005;
@@ -47,7 +47,15 @@ class StreamController
         {
             if (l_this->streaming)
             {
-                l_this->webSocket.sendBIN(l_this->streamingBuffer, MAX_READINGS);
+                WiFiClient client;
+                HTTPClient http;
+                http.begin(client,  "http://165.22.123.190:8005/sample/12");
+                http.addHeader("Content-Type", "application/octet-stream");
+                int httpResponseCode = http.POST(l_this->streamingBuffer, MAX_READINGS);
+                Serial.println(httpResponseCode);
+
+                http.end();
+                // l_this->webSocket.sendBIN(l_this->streamingBuffer, MAX_READINGS);
             }
             l_this->streaming = false;
             if (l_this->writing){
@@ -90,13 +98,21 @@ public:
         Serial.println("\nConnected to the WiFi network");
         Serial.print("Local ESP32 IP: ");
         Serial.println(WiFi.localIP());
-        webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
+        // webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
+
+
+        // String serverName = "http://www.google.com";
+        // HTTPClient http;
+        // http.begin(serverName.c_str());
+        // int httpResponseCode = http.GET();
+        // Serial.println(httpResponseCode);
+
         Serial.println("\nConnecting Websocket");
-        while (!webSocket.isConnected()){
-           Serial.print(".");
-            delay(100);
-        }
-        webSocket.setReconnectInterval(5000);
+        // while (!webSocket.isConnected()){
+        //    Serial.print(".");
+        //     delay(100);
+        // }
+        // webSocket.setReconnectInterval(5000);
 
         xTaskCreatePinnedToCore(
             sendReadings, /* Task function. */

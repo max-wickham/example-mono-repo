@@ -38,10 +38,9 @@ uint8_t maxReading = 0;
 void loop()
 {
 
-  const int timeBetweenMesurements_us = 500;
+  const int timeBetweenMesurements_us = 1000 * 10;
   static int lastMeasurementTime = micros();
 
-  uint8_t x[3] = {0};
 
   if(adc.frameReady() & (micros() - lastMeasurementTime > timeBetweenMesurements_us))
   {

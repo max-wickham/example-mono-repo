@@ -12,7 +12,9 @@
 #include <WebSocketsClient.h>
 #include "esp_wifi.h"
 
-#define MAX_READINGS 16 * 250 * 4
+// #define MAX_READINGS 16 * 250 * 4
+#define PACKET_SIZE 33
+#define MAX_READINGS PACKET_SIZE * 100
 
 const std::string serverAddress = "165.22.123.190";
 const int serverPort = 8005;
@@ -48,12 +50,12 @@ class StreamController
                 l_this->webSocket.sendBIN(l_this->streamingBuffer, MAX_READINGS);
             }
             l_this->streaming = false;
-            Serial.println("Start Waiting");
+            if (l_this->writing){
+              Serial.println("Start Waiting for writing");
+            }
             while (l_this->writing)
             {
-                // Serial.println(l_this->writing);
             }
-            Serial.println("End Waiting");
             l_this->streamingBuffer = l_this->streamingBuffer == readingBuffer1 ? readingBuffer2 : readingBuffer1;
             l_this->writing = true;
             while (!l_this->streaming)
@@ -89,6 +91,11 @@ public:
         Serial.print("Local ESP32 IP: ");
         Serial.println(WiFi.localIP());
         webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
+        Serial.println("\nConnecting Websocket");
+        while (!webSocket.isConnected()){
+           Serial.print(".");
+            delay(100);
+        }
         webSocket.setReconnectInterval(5000);
 
         xTaskCreatePinnedToCore(
@@ -101,35 +108,45 @@ public:
             1);           /* pin task to core 0 */
     }
 
-    void addReading(float &reading)
+    void addReading(int32_t &reading){
+        unsigned char *bytePtr = reinterpret_cast<unsigned char *>(&reading);
+        addReading(bytePtr, 4);
+    }
+
+    void addReading(uint8_t* framePointer, size_t frameLength)
     {
         if (readingIndex == 0){
             Serial.println("Start of buffer");
         }
-        unsigned char *bytePtr = reinterpret_cast<unsigned char *>(&reading);
-        for (int i = 0; i < 4; i++)
+        // unsigned char *bytePtr = reinterpret_cast<unsigned char *>(&framePointer);
+        //
+        for (int i = 0; i < frameLength; i++)
         {
-            writingBuffer[i + readingIndex] = bytePtr[i];
+            writingBuffer[i + readingIndex] = framePointer[i];
         }
-        readingIndex += 4;
+        readingIndex += frameLength;
         if (readingIndex == MAX_READINGS)
         {
-            Serial.println("End of buffer");
+            // Serial.println("End of buffer");
             readingIndex = 0;
             this->writing = false;
-            Serial.println("Set to false");
+            // Serial.println("Set to false");
+            if (this->streaming){
+              Serial.println("waiting for streaming");
+            }
             while (this->streaming)
             {
             }
-            Serial.println("End of streaming");
+            // Serial.println("End of streaming");
             writingBuffer = writingBuffer == readingBuffer1 ? readingBuffer2 : readingBuffer1;
             this->streaming = true;
             while (!this->writing)
             {
             }
-            Serial.println("End of waiting");
+            // Serial.println("End of waiting");
         }
     }
+
 
     void run()
     {

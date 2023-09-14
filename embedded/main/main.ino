@@ -28,7 +28,7 @@ void setup()
   // //Channel settings
   adc.writeReg(ADS131_CH0_CFG,0b0000000000000000);
   // //Gain settings, 1-128 (increasing by factor of 2)
-  adc.setGain(8);
+  adc.setGain(4);
   adc.WAKEUP();
   delayMicroseconds(50);
   adc.startData();

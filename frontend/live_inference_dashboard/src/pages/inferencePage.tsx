@@ -289,7 +289,7 @@ const RecordingCard = memo(function () {
 
     function runSquareCounter() {
         setTimeout(() => { console.log('1'); setIsRecording(true); setSquareCount(1); }, 10);
-        setTimeout(() => { console.log('2'); setSquareCount(4) }, 1500);
+        setTimeout(() => { console.log('2'); setSquareCount(4) }, 300);
         setTimeout(() => {
             setSquareCount(0);
             setIsRecording(false);
@@ -298,8 +298,8 @@ const RecordingCard = memo(function () {
             }
             // TODO save the gesture
             // Also reload the models with a short delay after
-            setTimeout(() => { modelsManager.getPreMadeModels() }, 2100);
-        }, 2000);
+            setTimeout(() => { modelsManager.getPreMadeModels() }, 8100);
+        }, 800);
     }
 
     // if (selectedGestureID === null && squareCounter !== 0) {

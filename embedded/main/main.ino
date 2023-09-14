@@ -44,6 +44,7 @@ void loop()
 
   if(adc.frameReady() & (micros() - lastMeasurementTime > timeBetweenMesurements_us))
   {
+    adc.newFrame();
     lastMeasurementTime = micros();
     streamController->addReading(adc.framePointer(), adc.frameSize());
     // streamController->addReading(&(x[0]), 3);

@@ -14,8 +14,8 @@ class EnvironmentSettings(BaseSettings):
     ENV : str = ""
     S3_REGION : str = "ams3"
     S3_URL : str = "http://10.5.10.6:9000"
-    S3_KEY : str = "56qHNcBwWOZSULWDUWaFNNm3AUNmU2UglcyHWECQ"
-    S3_ID : str = "8NXWLDpiLeuKWhM1XQ5k"
+    S3_KEY : str = "YWbbvo218D5DSijDf3moSUSt9M4n6BAmxcqs4Ahg"
+    S3_ID : str = "y2GJYMfN9Ia7flEROuT8"
     CELERY_BROKER_URL : str = 'redis://localhost:6379'
     CELERY_RESULT_BACKEND : str = "redis://localhost:6379"
 

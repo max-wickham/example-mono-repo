@@ -1,6 +1,0 @@
-# Ignore everything
-/*
-
-# Exclude the .minio.sys folder
-!.minio.sys/
-!.gitignore

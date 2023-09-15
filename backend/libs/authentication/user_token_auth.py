@@ -17,18 +17,22 @@ class Token(BaseModel):
     token_type: str
 
 class TokenData(BaseModel):
-    token_type : str = 'user'
     account_id: str
     exp : int
+    token_type : str = 'user'
+    token : str = ''
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=environmentSettings.token_url)
 
 async def token_authentication(token: str = Depends(oauth2_scheme)) -> TokenData:
     try:
         payload = jwt.decode(token, environmentSettings.jwt_secret, algorithms=[environmentSettings.jwt_algorithm])
+        # print(payload)
+        # payload['exp'] = int(payload['exp'])
         tokenData = TokenData(**payload)
 
         if tokenData.exp < int(time.time()): raise InvalidAccessToken(token, "expired")
+        tokenData.token = token
         return tokenData
     except:
         pass

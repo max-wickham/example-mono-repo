@@ -2,7 +2,7 @@ version: "3.9" # optional since v1.27.0
 services:
 
   account-service:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
     build:
       context: .
       dockerfile: backend/client_services/account_service/dev.Dockerfile
@@ -25,18 +25,20 @@ services:
       - vpcbr
 
   data-stream-service:
-    profiles : ["backendfull", "stream"]
+    profiles : ["backendfull", "stream", "ingest"]
     build:
       context: .
       dockerfile: backend/client_services/data_stream_service/dev.Dockerfile
     volumes:
       - ./backend/client_services/data_stream_service/app:/app
+      - ./backend/client_services/data_stream_service/entrypoint.sh:/entrypoint.sh
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
       - ./backend/configs:/configs
       - ./backend/client_services/data_stream_service/test.txt:/test.txt
     ports:
       - "8005:8080"
+      - "8888:8888/udp"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
       - TOKEN_URL=http://localhost:8000/token
@@ -45,6 +47,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
+      - PYTHONUNBUFFERED=1
     networks:
       - vpcbr
 
@@ -69,11 +72,12 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
+      - PYTHONUNBUFFERED=1
     networks:
       - vpcbr
 
   recording-upload-service:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
     build:
       context: .
       dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
@@ -98,7 +102,7 @@ services:
 
 
   model-service:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
     build:
       context: .
       dockerfile: backend/client_services/model_service/dev.Dockerfile
@@ -121,7 +125,7 @@ services:
       - vpcbr
 
   training-service:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
     build:
       context: .
       dockerfile: backend/client_services/training_service/dev.Dockerfile
@@ -141,6 +145,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
       - REDIS_URL=redis://redis
+      - PYTHONUNBUFFERED=1
     networks:
       - vpcbr
 
@@ -169,16 +174,46 @@ services:
       - account-service
       - recording-upload-service
 
-  fake-data-gen:
+  live-inference-dashboard:
     profiles: ["backendfull"]
+    build:
+      context: ./frontend/live_inference_dashboard
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./frontend/live_inference_dashboard/src:/app/src
+      - ./frontend/live_inference_dashboard/node_modules:/app/node_modules
+      - ./frontend/live_inference_dashboard/package.json:/app/package.json
+    ports:
+      - "4000:3000"
+    environment:
+      - secret=secret
+      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+      - token_url=http://localhost:8080/token
+      - mongo_database_url=mongodb://mongo:27017/
+      - ENV=DEV
+      - REDIS_URL=redis://redis
+      - API_KEY=test
+      - PYTHONUNBUFFERED=1
+    networks:
+     - vpcbr
+    depends_on:
+      - account-service
+      - recording-upload-service
+      - model-service
+
+  fake-data-gen:
+    profiles: ["backendfull", "stream"]
     build:
       context: .
       dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
     volumes:
       - ./backend/dev_services/create_fake_data/main.py:/main.py
+      - ./backend/dev_services/create_fake_data/X_test.pkl:/X_test.pkl
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
+      - ./model_saving:/model_saving
     environment:
+      - PYTHONUNBUFFERED=1
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
       - TOKEN_URL=http://localhost:8000/token
       - MONGO_DATABASE_URL=mongodb://mongo:27017/
@@ -189,18 +224,20 @@ services:
     networks:
       - vpcbr
     depends_on:
-      - dev-dashboard
+      - account-service
 
 
   mongo:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
+    command: mongod --quiet --logpath /dev/null
     image: mongo:latest
     ports:
       - "27017:27017"
     networks:
      - vpcbr
+
   redis:
-    profiles: ["backendfull", "stream"]
+    profiles: ["backendfull", "stream", "ingest"]
     image: redis:latest
     networks:
      - vpcbr
@@ -208,7 +245,7 @@ services:
       - "6379:6379"
 
   minio:
-    profiles: ["backendfull"]
+    profiles: ["backendfull", "stream"]
     image: 'minio/minio:latest'
     volumes:
       - ./volumes/minio_data:/data

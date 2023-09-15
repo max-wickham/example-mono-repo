@@ -11,6 +11,7 @@ from celery import Celery
 from schemas.mongo_models.account_models import MongoAccount
 from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.training_models import MongoTrainingModel
+from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 from configs.commons import Tasks
 
 from app.api.configs.configs import Config, environmentSettings
@@ -87,8 +88,9 @@ async def app_init():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoAccount, MongoGestureInformation, MongoTrainingModel])
+        document_models=[MongoAccount, MongoGestureInformation, MongoTrainingModel, MongoPreMadeModel])
 
 
 # import routes
-from app.api.routes.model_routes import *
+# from app.api.routes.model_routes import *
+from app.api.routes.pre_made_model_routes import *

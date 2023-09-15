@@ -34,9 +34,10 @@ async def get_token(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
         )
     token_data: TokenData = TokenData.construct()
     token_data.account_id = str(mongo_account.id)
-    token_data.exp = time.time() + environmentSettings.jwt_exp
+    token_data.exp = int(time.time() + environmentSettings.jwt_exp)
     access_token = create_access_token(token_data)
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 
 @app.get('/validate_token', tags=["Token"])

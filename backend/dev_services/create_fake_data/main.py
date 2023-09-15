@@ -2,18 +2,39 @@
 import asyncio
 import requests
 import os
+import base64
+import struct
 import time
+import pickle
 
 from passlib.context import CryptContext
 from beanie import init_beanie
 import motor
+import boto3
+from redis.asyncio import from_url
 
-from schemas.mongo_models.account_models import MongoAccount, MongoAccountGestureRecordings
+from schemas.mongo_models.account_models import MongoAccount, MongoAccountGestureRecordings, UserFineTunedModel, TrainingState
 from schemas.mongo_models.gesture import MongoGestureInformation, MongoAccountGestureRecordings
-from schemas.mongo_models.training_models import MongoTrainingModel
+from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+redis = from_url("redis://redis", decode_responses=True)
 
+import os
+os.environ['S3_USE_SIGV4'] = 'True'
+s3 = boto3.resource('s3',
+                    endpoint_url="http://10.5.10.6:9000",
+                    aws_access_key_id="y2GJYMfN9Ia7flEROuT8",
+                    aws_secret_access_key="YWbbvo218D5DSijDf3moSUSt9M4n6BAmxcqs4Ahg"
+                    )
+
+def read_from_pickle(path):
+    with open(path, 'rb') as file:
+        try:
+            while True:
+                yield pickle.load(file)
+        except EOFError:
+            pass
 
 # connect to mongo
 async def main():
@@ -26,8 +47,7 @@ async def main():
         database=client['test'], document_models=[
             MongoAccount,
             MongoGestureInformation,
-            # MongoAccountGestureRecordings,
-            MongoTrainingModel
+            MongoPreMadeModel
         ])
 
     mongo_account = MongoAccount(
@@ -35,12 +55,13 @@ async def main():
         email='test',
         password_hash=pwd_context.hash('test'),
         gestures={},
-        models=[]
+        models={}
     )
     await mongo_account.save()
 
-    gesture = []
-    for name in ('test_gesture', 'test_gesture2'):
+    gestures = []
+    gesture_name = ['right','left','up','down']
+    for name in gesture_name:
         mongo_gesture = MongoGestureInformation(
             name=name,
             comments='comments',
@@ -49,7 +70,85 @@ async def main():
         )
 
         await mongo_gesture.save()
-        gesture.append(mongo_gesture)
+        gestures.append(mongo_gesture)
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'test_model',
+        gestures = [gesture.id for gesture in gestures],
+        model_weights = 'model_saving'
+    )
+
+    await pre_made_model.save()
+
+
+    mongo_account.models[str(pre_made_model.id)] = UserFineTunedModel(
+        training_state = TrainingState.COMPLETE,
+        model_location = 'model_saving',
+        pre_made_model_id = pre_made_model.id,
+    )
+
+    await mongo_account.save();
+    # mongo_training_model = MongoTrainingModel(
+    #     creation_date = time.time(),
+    #     name = 'test_model',
+    #     gestures = [MongoTrainingModel.MongoModelGestureInfo(
+    #         gesture_name= gesture.name,
+    #         video_link = '',
+    #         photo_link = '',
+    #         gesture_id = str(gesture.id),
+    #         command = ''
+    #     ) for gesture in gestures],
+    #     training_state = TrainingState.COMPLETE,
+    #     account_id = mongo_account.id,
+    #     model_file_name = 'model_saving',
+    #     pre_made_model_id=pre_made_model.id
+    # )
+    # await mongo_training_model.save()
+    # mongo_account.models.append(str(mongo_training_model.id))
+    # await mongo_account.save()
+
+
+    # mongo_training_model = MongoTrainingModel(
+    #     creation_date = time.time(),
+    #     name = 'test_model2',
+    #     gestures = [MongoTrainingModel.MongoModelGestureInfo(
+    #         gesture_name= gesture.name,
+    #         video_link = '',
+    #         photo_link = '',
+    #         gesture_id = str(gesture.id),
+    #         command = ''
+    #     ) for gesture in gestures],
+    #     training_state = TrainingState.COMPLETE,
+    #     account_id = mongo_account.id,
+    #     model_file_name = 'model_saving',
+    #     pre_made_model_id=pre_made_model.id
+    # )
+    # await mongo_training_model.save()
+    # mongo_account.models.append(str(mongo_training_model.id))
+    # await mongo_account.save()
+
+    # print(mongo_training_model.id)
+
+    # TODO upload model file
+
+    # bucket_name = 'models'
+
+    # # Specify the local folder path you want to upload
+    # local_folder_path = '/model_saving'
+
+    # # Walk through the local folder and upload each file to S3
+    # for root, dirs, files in os.walk(local_folder_path):
+    #     for file in files:
+    #         local_file_path = os.path.join(root, file)
+    #         # Construct the S3 object key by removing the local folder path
+    #         s3_object_key = os.path.relpath(local_file_path, local_folder_path)
+
+    #         # Upload the file to S3
+    #         s3.upload_file(local_file_path, bucket_name, s3_object_key)
+
+
+
+
 
     # response = requests.post(
     #     'http://account-service:8080/token',
@@ -88,6 +187,27 @@ async def main():
     #         "model_name": "model1"
     #     },
     #     timeout=3)
+    # print('loading data')
+    # data = read_from_pickle('/X_test.pkl')
+    # print(data.shape)
+    # NUM_FEATURES = 8
+    # await redis.delete(12)
+    # while True:
+    #     float_array = [float(i) for i in range(NUM_FEATURES)]
+    #     byte_array = bytearray()
+    #     # Iterate through the float values and pack them as float32 (4 bytes each)
+    #     for value in float_array:
+    #         packed_value = struct.pack('f', value)
+    #         byte_array.extend(packed_value)
+
+    #     base64_encoded = base64.b64encode(byte_array)
+    #     base64_encoded_str = base64_encoded.decode('utf-8')
+    #     await redis.lpush(12, base64_encoded_str)
+    #     time.sleep(0.00005)
+    #     length = await redis.llen(12)
+    #     if length > 100000:
+    #         await redis.ltrim(12, int(length / 2), length)
+
 
 
 asyncio.run(main())

@@ -5,7 +5,17 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware
 from redis.asyncio import from_url
 import redis
+import boto3
+import motor
+from beanie import init_beanie
+
+from schemas.mongo_models.account_models import MongoAccount
+from schemas.mongo_models.training_models import MongoTrainingModel, TrainingState
+from schemas.mongo_models.pre_made_models import MongoPreMadeModel
+from schemas.mongo_models.gesture import MongoGestureInformation
+
 from app.api.configs.configs import Config, environmentSettings
+
 
 redis = from_url(environmentSettings.REDIS_URL, decode_responses=True)
 
@@ -28,6 +38,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+if environmentSettings.ENV == 'DEV':
+    import os
+    os.environ['S3_USE_SIGV4'] = 'True'
+    s3 = boto3.resource('s3',
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY
+                      )
+else:
+    s3 = boto3.client('s3',
+                      region_name=environmentSettings.S3_REGION,
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY)
+
+try:
+    s3.create_bucket(Bucket='models')
+except Exception:
+    print('unable to create bucket')
+
 @app.get('/')
 def docs():
     '''Redirect to docs'''
@@ -46,11 +76,18 @@ async def custom_swagger_ui_html(req):
 @app.on_event("startup")
 async def app_init():
     '''App start up code'''
+    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)
+    await init_beanie(
+        database=client['test']
+        if environmentSettings.ENV == 'DEV'
+        else client['main'],
+        document_models=[MongoAccount, MongoTrainingModel, MongoPreMadeModel, MongoGestureInformation])
 
 # import routes
 
 from app.api.routes.inference_routes import *
-
+from app.api.routes.recording_routes import *
+# import app.api.routes.recording_routes
 
 # from asyncio import sleep
 # from sanic import Sanic

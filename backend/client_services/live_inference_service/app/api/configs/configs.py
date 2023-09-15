@@ -12,7 +12,14 @@ class EnvironmentSettings(BaseSettings):
     mongo_database_url : str = 'mongodb://localhost:27017/'
     api_url : str = 'http://localhost:8000'
     ENV : str = ""
-    REDIS_URL: str = ""
+    REDIS_URL: str = "redis://localhost:6379"
+    S3_REGION : str = "ams3"
+    S3_URL : str = "http://10.5.10.6:9000"
+    S3_KEY : str = "YWbbvo218D5DSijDf3moSUSt9M4n6BAmxcqs4Ahg"
+    S3_ID : str = "y2GJYMfN9Ia7flEROuT8"
+    CELERY_BROKER_URL : str = 'redis://localhost:6379'
+    CELERY_RESULT_BACKEND : str = "redis://localhost:6379"
+
 
 environmentSettings = EnvironmentSettings()
 

@@ -26,3 +26,6 @@ class MongoTrainingModel(Document):
     training_state: TrainingState = TrainingState.NOT_STARTED
     account_id: PydanticObjectId
     model_file_name: str
+    model_outputs : list[str] = ['up','left','right','down']
+
+    pre_made_model_id: PydanticObjectId

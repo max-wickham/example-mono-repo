@@ -480,10 +480,12 @@ void loadData(int adsIndex)
     bool allFramesReceived = true;
     loop_ads
     {
+      Serial.println(receivedFrame[adsIndex]);
       allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
     }
     if (allFramesReceived)
     {
+      Serial.println("All frames received");
       // Set header and footer if needed
 #ifdef OPEN_BCI
       // add the header byte

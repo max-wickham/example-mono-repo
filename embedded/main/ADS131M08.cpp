@@ -2,7 +2,7 @@
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
 
-#define loop_ads for (int adsIndex; adsIndex < NUM_ADS; adsIndex++)
+#define loop_ads for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
 
 SPIClass ads_spi(ADS131_PORT);
 
@@ -16,17 +16,19 @@ volatile bool frame_Ready = false;
 volatile bool frame_Overrun = false;
 volatile uint8_t sample_counter = 0;
 
+volatile bool receivedFrame[NUM_ADS] = {false};
+
 const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
 const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
 const int drdyPins[NUM_ADS] = ADS131_DRDY_PINS;
-
 
 void enADS(int adsIndex)
 {
   digitalWrite(selectPins[adsIndex], LOW);
 }
 
-void disADS(int adsIndex){
+void disADS(int adsIndex)
+{
   digitalWrite(selectPins[adsIndex], HIGH);
 }
 
@@ -45,8 +47,22 @@ void disAllADS()
   }
 }
 
-
+template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void);
+
+// !!!! Careful Super hacky way to do this
+
+template <int adsIndex>
+void setADSCallbacks()
+{
+  attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on
+  setADSCallbacks<adsIndex - 1>();
+}
+template <>
+void setADSCallbacks<0>()
+{
+  attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
+}
 
 void ADS131M08::begin(void)
 {
@@ -77,11 +93,13 @@ void ADS131M08::begin(void)
     spiCommFrame(adsIndex, &responseArr[0]);
     spiCommFrame(adsIndex, &responseArr[0]);
   }
+
   // Attach the ISR
-  loop_ads
-  {
-    attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR, FALLING); // interrupt on each conversion
-  }
+  setADSCallbacks<NUM_ADS>();
+  // loop_ads
+  // {
+  //   attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on each conversion
+  // }
 }
 
 void ADS131M08::hw_reset() // Hardware Reset"
@@ -139,56 +157,70 @@ uint8_t *ADS131M08::framePointer(void) // return a pointer to the data frame
  * Interrupt that gets called when DRDY goes HIGH.
  * Transfers data and sets a flag.
  */
+template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void)
 {
+#ifdef OPEN_BCI
+  const int header_offset = 2;
+#else
+  const int header_offset = 0;
+#endif
+
   Serial.println("Interrupt Triggered");
+
+  receivedFrame[adsCallbackIndex] == true;
 
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     Serial.println("Saving Frame");
     Serial.println(index_in_frame);
-
-#ifdef OPEN_BCI
-    // add the header byte
-    ADS131_dataFrame[index_in_frame][0] = 0xA0;
-    // add the sample number
-    ADS131_dataFrame[index_in_frame][1] = sample_counter++;
-    const int header_offset = 2;
-#else
-    const int header_offset = 0;
-#endif
     disAllADS();
-    loop_ads
+    enADS(adsCallbackIndex);
+
+    // get the status data
+    ADS131_statusFrame[adsCallbackIndex][index_in_frame] = 0;
+    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
+    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
+
+    // get the frame data
+    for (int index = adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
+         index < NUM_CHANNELS_PER_ADS * 3 + adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
+         index++)
     {
-      disAllADS();
-      enADS(adsIndex);
-      // get the status data
-
-      ADS131_statusFrame[adsIndex][index_in_frame] = 0;
-      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
-      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
-      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
-
-      for (int index = adsIndex * NUM_CHANNELS_PER_ADS * 3;
-           index < NUM_CHANNELS_PER_ADS * 3 + adsIndex * NUM_CHANNELS_PER_ADS * 3;
-           index++)
-      {
-        ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
-      }
-
-      // get CRC
-      ADS131_CRCFrame[adsIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
-      ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
-      ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
-      disAllADS();
+      ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
     }
 
-#ifdef OPEN_BCI
-    // add the footer byte
-    ADS131_dataFrame[index_in_frame][8 + NUM_ADS * NUM_CHANNELS_PER_ADS * 3] = 0xC0;
-#endif
+    // get CRC
+    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
+    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
 
-    index_in_frame++;
+    disADS(adsCallbackIndex);
+
+    bool allFramesReceived = true;
+    loop_ads
+    {
+      allFramesReceived = allFramesReceived & receivedFrame[adsIndex];
+    }
+    if (allFramesReceived)
+    {
+      // Set header and footer if needed
+#ifdef OPEN_BCI
+      // add the header byte
+      ADS131_dataFrame[index_in_frame][0] = 0xA0;
+      // add the sample number
+      ADS131_dataFrame[index_in_frame][1] = sample_counter++;
+      // add the footer byte
+      ADS131_dataFrame[index_in_frame][8 + NUM_ADS * NUM_CHANNELS_PER_ADS * 3] = 0xC0;
+#endif
+      loop_ads
+      {
+        receivedFrame[adsIndex] = false;
+      }
+      index_in_frame++;
+    }
+
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
       frame_Ready = true;
@@ -268,10 +300,7 @@ void ADS131M08::WAKEUP()
 
 #ifndef ADS131_POLLING
     // Attach the ISR
-    loop_ads
-    {
-      attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR, FALLING);
-    }
+    setADSCallbacks<NUM_ADS>();
 #endif
   }
   return;

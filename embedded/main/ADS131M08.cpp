@@ -485,7 +485,6 @@ void loadData(int adsIndex)
     }
     if (allFramesReceived)
     {
-      Serial.println("All frames received");
       // Set header and footer if needed
 #ifdef OPEN_BCI
       // add the header byte
@@ -501,7 +500,8 @@ void loadData(int adsIndex)
       }
       index_in_frame++;
     }
-
+    Serial.println("Index Ind frame");
+    Serial.println(index_in_frame);
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
       frame_Ready = true;

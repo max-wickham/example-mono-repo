@@ -44,14 +44,15 @@ void loop()
   const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
   static int lastMeasurementTime = micros();
 
-  adc.run();
-
   if (adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
   {
+    Serial.println("frameReady");
     lastMeasurementTime = micros();
     streamController->addReading(adc.framePointer(), adc.frameSize());
     adc.newFrame();
   }
+  adc.run();
+
 
   // uint8_t data[480] = {0};
 

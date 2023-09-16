@@ -517,10 +517,10 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-
   // Handle any load data requests from each ads
   loop_ads
   {
+    Serial.println(requiresDataLoad[adsIndex]);
     if (requiresDataLoad[adsIndex])
     {
       requiresDataLoad[adsIndex] = false;

@@ -51,16 +51,17 @@ void disAllADS()
 template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void);
 
-// !!!! Careful Super hacky way to do this
+// !!!! Careful Super hacky way to do this, uses recursive template to define callbacks for each of ads's
+// Initiated by running setADSCallbacks<NUM_ADS>
 
 template <int adsIndex>
 void setADSCallbacks()
 {
-  attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on
-  setADSCallbacks<adsIndex - 1>();
+  attachInterrupt(drdyPins[adsIndex-1], ADS131_dataReadyISR<adsIndex-1>, FALLING); // interrupt on
+  setADSCallbacks<adsIndex - 2>();
 }
 template <>
-void setADSCallbacks<0>()
+void setADSCallbacks<1>()
 {
   attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
 }
@@ -96,8 +97,8 @@ void ADS131M08::begin(void)
   }
 
   // Attach the ISR
-  // setADSCallbacks<NUM_ADS - 1>();
-  attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
+  setADSCallbacks<NUM_ADS>();
+  // attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
   // loop_ads
   // {
   //   attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on each conversion
@@ -237,7 +238,7 @@ void ADS131M08::WAKEUP()
 
 #ifndef ADS131_POLLING
     // Attach the ISR
-    setADSCallbacks<NUM_ADS - 1>();
+    setADSCallbacks<NUM_ADS>();
 #endif
   }
   return;
@@ -456,12 +457,9 @@ void loadData(int adsIndex)
 
   // Serial.println("Interrupt Triggered");
 
-  Serial.print(index_in_frame);
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     receivedFrame[adsIndex] = true;
-    Serial.println("Saving Frame");
-    Serial.println(index_in_frame);
     disAllADS();
     enADS(adsIndex);
 
@@ -477,14 +475,12 @@ void loadData(int adsIndex)
     {
       ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
     }
-    Serial.print("b");
     // get CRC
     ADS131_CRCFrame[adsIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
     ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
 
     disADS(adsIndex);
-    Serial.print("c");
     bool allFramesReceived = true;
     loop_ads
     {
@@ -506,13 +502,11 @@ void loadData(int adsIndex)
       {
         receivedFrame[adsIndex] = false;
       }
-      Serial.println(index_in_frame);
       index_in_frame++;
     }
 
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
-      Serial.print('Frame is ready');
       frame_Ready = true;
     }
   }
@@ -536,4 +530,5 @@ void ADS131M08::run()
       requiresDataLoad[adsIndex] = false;
     }
   }
+
 }

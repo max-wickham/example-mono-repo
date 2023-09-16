@@ -81,7 +81,7 @@
 
 // #define OPEN_BCI // Remove if not using the OpenBCI protocol
 
-#define NUM_ADS 1
+#define NUM_ADS 2
 #define NUM_CONVERSIONS_PER_FRAME 10
 #define NUM_CHANNELS_PER_ADS 8
 

@@ -57,8 +57,9 @@ template <int adsNumber>
 void setADSCallbacksTemplate()
 {
   // Don't manually run me
-  attachInterrupt(drdyPins[adsNumber-1], ADS131_dataReadyISR<adsNumber-1>, FALLING);
-  if constexpr (adsNumber > 1){
+  attachInterrupt(drdyPins[adsNumber - 1], ADS131_dataReadyISR<adsNumber - 1>, FALLING);
+  if constexpr (adsNumber > 1)
+  {
     setADSCallbacksTemplate<adsNumber - 1>();
   }
 }
@@ -184,6 +185,7 @@ uint16_t ADS131M08::NULL_STATUS(int adsIndex)
 
 bool ADS131M08::RESET()
 {
+  bool result = true;
   loop_ads
   {
     Serial.println("SW Reset");
@@ -195,11 +197,10 @@ bool ADS131M08::RESET()
     // Read response
     spiCommFrame(adsIndex, &responseArr[0]);
 
-    if ((responseArr[0] >> 16) == 0xff28)
-      return true;
-    else
-      return false;
+    if (!((responseArr[0] >> 16) == 0xff28))
+      result = false;
   }
+  return result;
 }
 
 void ADS131M08::STANDBY()
@@ -215,10 +216,7 @@ void ADS131M08::STANDBY()
 
 #ifndef ADS131_POLLING
     // Detach the ISR
-    loop_ads
-    {
-      detachInterrupt(drdyPins[adsIndex]);
-    }
+    detachInterrupt(drdyPins[adsIndex]);
 #endif
   }
   return;
@@ -300,27 +298,25 @@ bool ADS131M08::globalChop(int adsIndex, bool enabled, uint8_t log2delay)
 bool ADS131M08::writeReg(int adsIndex, uint16_t reg, uint16_t data)
 {
   bool result = true;
-  for (int ads_index = 0; ads_index < NUM_ADS; ads_index++)
+
+  /* Writes the content of data to the register reg
+      Returns true if successful
+  */
+
+  // Make command word using syntax found in data sheet
+  uint16_t commandWord = ADS131_CMD_WREG + (reg << 7);
+
+  uint32_t responseArr[10];
+
+  // Use first frame to send command
+  spiCommFrame(adsIndex, &responseArr[0], commandWord, data);
+
+  // Get response
+  spiCommFrame(adsIndex, &responseArr[0]);
+
+  if (!(((0x04 << 12) + (reg << 7)) == responseArr[0]))
   {
-    /* Writes the content of data to the register reg
-        Returns true if successful
-    */
-
-    // Make command word using syntax found in data sheet
-    uint16_t commandWord = ADS131_CMD_WREG + (reg << 7);
-
-    uint32_t responseArr[10];
-
-    // Use first frame to send command
-    spiCommFrame(ads_index, &responseArr[0], commandWord, data);
-
-    // Get response
-    spiCommFrame(ads_index, &responseArr[0]);
-
-    if (!(((0x04 << 12) + (reg << 7)) == responseArr[0]))
-    {
-      result = false;
-    }
+    result = false;
   }
   return result;
 }
@@ -530,5 +526,4 @@ void ADS131M08::run()
       requiresDataLoad[adsIndex] = false;
     }
   }
-
 }

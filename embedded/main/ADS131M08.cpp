@@ -457,7 +457,8 @@ void loadData(int adsIndex)
 #endif
 
   // Serial.println("Interrupt Triggered");
-
+  Serial.print("ADS Index: ");
+  Serial.println(adsIndex);
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     receivedFrame[adsIndex] = true;
@@ -470,8 +471,8 @@ void loadData(int adsIndex)
     ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
     // get the frame data
-    for (int index = adsIndex * NUM_CHANNELS_PER_ADS * 3;
-         index < NUM_CHANNELS_PER_ADS * 3 + adsIndex * NUM_CHANNELS_PER_ADS * 3;
+    for (int index = adsIndex * NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT;
+         index < NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT + adsIndex * NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT;
          index++)
     {
       ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
@@ -487,7 +488,6 @@ void loadData(int adsIndex)
     {
       allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
     }
-    Serial.print(receivedFrame[adsIndex]);
     if (allFramesReceived)
     {
       // Set header and footer if needed

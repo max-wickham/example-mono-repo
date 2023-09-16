@@ -84,6 +84,7 @@
 #define NUM_ADS 2
 #define NUM_CONVERSIONS_PER_FRAME 10
 #define NUM_CHANNELS_PER_ADS 8
+#define NUM_BYTES_PER_INT 3
 
 #ifdef OPEN_BCI
 #define DATA_BYTES_PER_CONVERSION (NUM_CHANNELS_PER_ADS * 3 * NUM_ADS + 9) // add the OpenBCI protocol bytes

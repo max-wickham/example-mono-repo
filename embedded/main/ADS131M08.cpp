@@ -52,19 +52,17 @@ template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void);
 
 // !!!! Careful Super hacky way to do this, uses recursive template to define callbacks for each of ads's
-// Initiated by running setADSCallbacks<NUM_ADS>();
-
-template <int adsIndex>
-void setADSCallbacks()
+// Initiated by running setADSCallbacks(); !!!!!
+template <int adsNumber>
+void setADSCallbacksTemplate()
 {
-  attachInterrupt(drdyPins[adsIndex-1], ADS131_dataReadyISR<adsIndex-1>, FALLING); // interrupt on
-  setADSCallbacks<adsIndex - 1>();
+  // Don't manually run me
+  attachInterrupt(drdyPins[adsNumber-1], ADS131_dataReadyISR<adsNumber-1>, FALLING);
+  if constexpr (adsNumber > 1){
+    setADSCallbacksTemplate<adsNumber - 1>();
+  }
 }
-template <>
-void setADSCallbacks<1>()
-{
-  attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
-}
+#define setADSCallbacks setADSCallbacksTemplate<NUM_ADS>
 
 void ADS131M08::begin(void)
 {
@@ -97,7 +95,7 @@ void ADS131M08::begin(void)
   }
 
   // Attach the ISR
-  setADSCallbacks<NUM_ADS>();
+  setADSCallbacks();
   // attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
   // loop_ads
   // {
@@ -239,7 +237,7 @@ void ADS131M08::WAKEUP()
 
 #ifndef ADS131_POLLING
     // Attach the ISR
-    setADSCallbacks<NUM_ADS>();
+    setADSCallbacks();
 #endif
   }
   return;

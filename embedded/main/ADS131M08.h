@@ -117,7 +117,7 @@ public:
     // Data Read functions
     // bool getData(int32_t *buffer);
     void startData(void);        // Begin the filling of the data frame with conversions
-    void stopData(void);         // Stop the filling of the data frame with cinversions
+    void stopData(void);         // Stop the filling of the data frame with conversions
     void newFrame(void);         // reset the data frame
     bool frameReady(void);       // return the frame ready flag
     uint16_t frameSize(void);    // return the size of the data frame

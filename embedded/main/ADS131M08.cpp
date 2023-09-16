@@ -2,7 +2,7 @@
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
 
-#define loop_ads for (int adsIndex; adsIndex < NUM_ADS; adsIndex++)
+#define loop_ads for (int adsIndex=0; adsIndex < NUM_ADS; adsIndex++)
 
 SPIClass ads_spi(ADS131_PORT);
 

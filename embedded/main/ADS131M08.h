@@ -96,7 +96,7 @@ class ADS131M08
 private:
 
 public:
-    ADS131M08::ADS131M08()
+    ADS131M08()
     {
     }
     void begin(void);

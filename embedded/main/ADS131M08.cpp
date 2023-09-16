@@ -20,6 +20,27 @@ const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
 const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
 const int drdyPins[NUM_ADS] = ADS131_DRDY_PINS;
 
+
+void enADS(int adsIndex)
+{
+  digitalWrite(selectPins[adsIndex], LOW);
+}
+void enAllADS()
+{
+  loop_ads
+  {
+    digitalWrite(selectPins[adsIndex], LOW);
+  }
+}
+void disAllADS()
+{
+  loop_ads
+  {
+    digitalWrite(selectPins[adsIndex], HIGH);
+  }
+}
+
+
 void ADS131_dataReadyISR(void);
 
 void ADS131M08::begin(void)
@@ -448,23 +469,4 @@ bool ADS131M08::setGain(int gain)
   }
 
   return true;
-}
-
-void enADS(int adsIndex)
-{
-  digitalWrite(selectPins[adsIndex], LOW);
-}
-void enAllADS()
-{
-  loop_ads
-  {
-    digitalWrite(selectPins[adsIndex], LOW);
-  }
-}
-void disAllADS()
-{
-  loop_ads
-  {
-    digitalWrite(selectPins[adsIndex], HIGH);
-  }
 }

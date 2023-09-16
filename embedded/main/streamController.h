@@ -25,10 +25,9 @@ uint8_t readingBuffer1[MAX_READINGS] = {0};
 uint8_t readingBuffer2[MAX_READINGS] = {0};
 
 WiFiUDP udp;
-
+int sessionID = 12;
 class StreamController
 {
-    static const int sessionID = 12;
     WebSocketsClient webSocket; // websocket client class instance
 
     int readingIndex = 0;

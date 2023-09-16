@@ -456,7 +456,6 @@ void loadData(int adsIndex)
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     receivedFrame[adsIndex] = true;
-    disAllADS();
     enADS(adsIndex);
 
     // get the status data
@@ -524,8 +523,8 @@ void ADS131M08::run()
   {
     if (requiresDataLoad[adsIndex])
     {
-      loadData(adsIndex);
       requiresDataLoad[adsIndex] = false;
+      loadData(adsIndex);
     }
   }
 }

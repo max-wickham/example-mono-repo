@@ -95,7 +95,8 @@ void ADS131M08::begin(void)
   }
 
   // Attach the ISR
-  setADSCallbacks<NUM_ADS>();
+  //setADSCallbacks<NUM_ADS - 1>();
+  attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
   // loop_ads
   // {
   //   attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on each conversion
@@ -171,10 +172,10 @@ void ADS131_dataReadyISR(void)
 
   //Serial.println("Interrupt Triggered");
 
-  receivedFrame[adsCallbackIndex] == true;
-  Serial.println(frame_Running);
+  Serial.print(index_in_frame);
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
+    receivedFrame[adsCallbackIndex] == true;
     //Serial.println("Saving Frame");
     //Serial.println(index_in_frame);
     disAllADS();
@@ -185,7 +186,6 @@ void ADS131_dataReadyISR(void)
     ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
     ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
-
     // get the frame data
     for (int index = adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
          index < NUM_CHANNELS_PER_ADS * 3 + adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
@@ -193,19 +193,20 @@ void ADS131_dataReadyISR(void)
     {
       ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
     }
-
+    Serial.print("b");
     // get CRC
     ADS131_CRCFrame[adsCallbackIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
     ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
 
     disADS(adsCallbackIndex);
-
+    Serial.print("c");
     bool allFramesReceived = true;
     loop_ads
     {
-      allFramesReceived = allFramesReceived & receivedFrame[adsIndex];
+      allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
     }
+    Serial.print(allFramesReceived);
     if (allFramesReceived)
     {
       // Set header and footer if needed
@@ -232,7 +233,11 @@ void ADS131_dataReadyISR(void)
   }
   else
   {
-    frame_Overrun = true;
+    if (!frame_Running)
+    {
+      frame_Overrun = true;
+    }
+    
   }
 }
 
@@ -304,7 +309,7 @@ void ADS131M08::WAKEUP()
 
 #ifndef ADS131_POLLING
     // Attach the ISR
-    setADSCallbacks<NUM_ADS>();
+    setADSCallbacks<NUM_ADS - 1>();
 #endif
   }
   return;

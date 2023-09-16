@@ -172,7 +172,7 @@ void ADS131_dataReadyISR(void)
   Serial.println("Interrupt Triggered");
 
   receivedFrame[adsCallbackIndex] == true;
-
+  Serial.println(frame_Running);
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     Serial.println("Saving Frame");
@@ -221,12 +221,12 @@ void ADS131_dataReadyISR(void)
       {
         receivedFrame[adsIndex] = false;
       }
+      Serial.println(index_in_frame);
       index_in_frame++;
     }
 
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
-      Serial.print("F");
       frame_Ready = true;
     }
   }

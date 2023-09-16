@@ -140,7 +140,7 @@ void ADS131M08::newFrame(void) // reset the data frame
 
 bool ADS131M08::frameReady(void) // return the frame ready flag
 {
-  if (frameReady){
+  if (frame_Ready){
     Serial.println("Frame Ready");
   }
   return frame_Ready;

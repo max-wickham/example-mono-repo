@@ -52,7 +52,7 @@ template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void);
 
 // !!!! Careful Super hacky way to do this, uses recursive template to define callbacks for each of ads's
-// Initiated by running setADSCallbacks<NUM_ADS>
+// Initiated by running setADSCallbacks<NUM_ADS>();
 
 template <int adsIndex>
 void setADSCallbacks()
@@ -167,6 +167,7 @@ uint8_t *ADS131M08::framePointer(void) // return a pointer to the data frame
 template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void)
 {
+  // Make a request to load data
   requiresDataLoad[adsCallbackIndex] = true;
 }
 
@@ -522,6 +523,7 @@ void loadData(int adsIndex)
 void ADS131M08::run()
 {
 
+  // Handle any load data requests from each ads
   loop_ads
   {
     if (requiresDataLoad[adsIndex])

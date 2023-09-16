@@ -25,6 +25,11 @@ void enADS(int adsIndex)
 {
   digitalWrite(selectPins[adsIndex], LOW);
 }
+
+void disADS(int adsIndex){
+  digitalWrite(selectPins[adsIndex], HIGH);
+}
+
 void enAllADS()
 {
   loop_ads
@@ -136,8 +141,12 @@ uint8_t *ADS131M08::framePointer(void) // return a pointer to the data frame
  */
 void ADS131_dataReadyISR(void)
 {
+  Serial.println("Interrupt Triggered");
+
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
+    Serial.println("Saving Frame");
+    Serial.println(index_in_frame);
 
 #ifdef OPEN_BCI
     // add the header byte
@@ -420,7 +429,7 @@ void ADS131M08::spiCommFrame(int adsIndex, uint32_t *outPtr, uint16_t command, u
   *outPtr = spiTransferWord();
   // Serial.print(*outPtr,HEX);
   // Serial.println(";  ");
-  disAllADS();
+  disADS(adsIndex);
 }
 
 bool ADS131M08::setGain(int gain)

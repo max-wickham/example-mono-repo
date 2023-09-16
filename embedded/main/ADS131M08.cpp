@@ -166,14 +166,14 @@ void ADS131_dataReadyISR(void)
   const int header_offset = 0;
 #endif
 
-  Serial.println("Interrupt Triggered");
+  //Serial.println("Interrupt Triggered");
 
   receivedFrame[adsCallbackIndex] == true;
 
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
-    Serial.println("Saving Frame");
-    Serial.println(index_in_frame);
+    //Serial.println("Saving Frame");
+    //Serial.println(index_in_frame);
     disAllADS();
     enADS(adsCallbackIndex);
 

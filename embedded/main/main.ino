@@ -44,6 +44,8 @@ void loop()
   const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
   static int lastMeasurementTime = micros();
 
+  adc.run();
+
   if (adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
   {
     lastMeasurementTime = micros();

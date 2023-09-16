@@ -2,7 +2,7 @@
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
 
-#define loop_ads for (int adsIndex=0; adsIndex < NUM_ADS; adsIndex++)
+#define loop_ads for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
 
 SPIClass ads_spi(ADS131_PORT);
 
@@ -17,6 +17,7 @@ volatile bool frame_Overrun = false;
 volatile uint8_t sample_counter = 0;
 
 volatile bool receivedFrame[NUM_ADS] = {false};
+volatile bool requiresDataLoad[NUM_ADS] = {false};
 
 const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
 const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
@@ -95,7 +96,7 @@ void ADS131M08::begin(void)
   }
 
   // Attach the ISR
-  //setADSCallbacks<NUM_ADS - 1>();
+  // setADSCallbacks<NUM_ADS - 1>();
   attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
   // loop_ads
   // {
@@ -141,7 +142,8 @@ void ADS131M08::newFrame(void) // reset the data frame
 
 bool ADS131M08::frameReady(void) // return the frame ready flag
 {
-  if (frame_Ready){
+  if (frame_Ready)
+  {
     Serial.println("Frame Ready");
   }
   return frame_Ready;
@@ -164,81 +166,7 @@ uint8_t *ADS131M08::framePointer(void) // return a pointer to the data frame
 template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void)
 {
-#ifdef OPEN_BCI
-  const int header_offset = 2;
-#else
-  const int header_offset = 0;
-#endif
-
-  //Serial.println("Interrupt Triggered");
-
-  Serial.print(index_in_frame);
-  if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
-  {
-    receivedFrame[adsCallbackIndex] == true;
-    //Serial.println("Saving Frame");
-    //Serial.println(index_in_frame);
-    disAllADS();
-    enADS(adsCallbackIndex);
-
-    // get the status data
-    ADS131_statusFrame[adsCallbackIndex][index_in_frame] = 0;
-    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
-    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
-    ADS131_statusFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
-    // get the frame data
-    for (int index = adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
-         index < NUM_CHANNELS_PER_ADS * 3 + adsCallbackIndex * NUM_CHANNELS_PER_ADS * 3;
-         index++)
-    {
-      ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
-    }
-    Serial.print("b");
-    // get CRC
-    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
-    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
-    ADS131_CRCFrame[adsCallbackIndex][index_in_frame] |= ads_spi.transfer(0x00);
-
-    disADS(adsCallbackIndex);
-    Serial.print("c");
-    bool allFramesReceived = true;
-    loop_ads
-    {
-      allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
-    }
-    Serial.print(allFramesReceived);
-    if (allFramesReceived)
-    {
-      // Set header and footer if needed
-#ifdef OPEN_BCI
-      // add the header byte
-      ADS131_dataFrame[index_in_frame][0] = 0xA0;
-      // add the sample number
-      ADS131_dataFrame[index_in_frame][1] = sample_counter++;
-      // add the footer byte
-      ADS131_dataFrame[index_in_frame][8 + NUM_ADS * NUM_CHANNELS_PER_ADS * 3] = 0xC0;
-#endif
-      loop_ads
-      {
-        receivedFrame[adsIndex] = false;
-      }
-      Serial.println(index_in_frame);
-      index_in_frame++;
-    }
-
-    if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
-    {
-      frame_Ready = true;
-    }
-  }
-  else
-  {
-    if (!frame_Running)
-    {
-      frame_Overrun = true;
-    }
-    
-  }
+  requiresDataLoad[adsCallbackIndex] = true;
 }
 
 uint16_t ADS131M08::NULL_STATUS(int adsIndex)
@@ -516,4 +444,96 @@ bool ADS131M08::setGain(int gain)
   }
 
   return true;
+}
+
+void loadData(int adsIndex)
+{
+#ifdef OPEN_BCI
+  const int header_offset = 2;
+#else
+  const int header_offset = 0;
+#endif
+
+  // Serial.println("Interrupt Triggered");
+
+  Serial.print(index_in_frame);
+  if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
+  {
+    receivedFrame[adsIndex] = true;
+    Serial.println("Saving Frame");
+    Serial.println(index_in_frame);
+    disAllADS();
+    enADS(adsIndex);
+
+    // get the status data
+    ADS131_statusFrame[adsIndex][index_in_frame] = 0;
+    ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
+    ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+    ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
+    // get the frame data
+    for (int index = adsIndex * NUM_CHANNELS_PER_ADS * 3;
+         index < NUM_CHANNELS_PER_ADS * 3 + adsIndex * NUM_CHANNELS_PER_ADS * 3;
+         index++)
+    {
+      ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
+    }
+    Serial.print("b");
+    // get CRC
+    ADS131_CRCFrame[adsIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
+    ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+    ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
+
+    disADS(adsIndex);
+    Serial.print("c");
+    bool allFramesReceived = true;
+    loop_ads
+    {
+      allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
+    }
+    Serial.print(receivedFrame[adsIndex]);
+    if (allFramesReceived)
+    {
+      // Set header and footer if needed
+#ifdef OPEN_BCI
+      // add the header byte
+      ADS131_dataFrame[index_in_frame][0] = 0xA0;
+      // add the sample number
+      ADS131_dataFrame[index_in_frame][1] = sample_counter++;
+      // add the footer byte
+      ADS131_dataFrame[index_in_frame][8 + NUM_ADS * NUM_CHANNELS_PER_ADS * 3] = 0xC0;
+#endif
+      loop_ads
+      {
+        receivedFrame[adsIndex] = false;
+      }
+      Serial.println(index_in_frame);
+      index_in_frame++;
+    }
+
+    if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
+    {
+      Serial.print('Frame is ready');
+      frame_Ready = true;
+    }
+  }
+  else
+  {
+    if (!frame_Running)
+    {
+      frame_Overrun = true;
+    }
+  }
+}
+
+void ADS131M08::run()
+{
+
+  loop_ads
+  {
+    if (requiresDataLoad[adsIndex])
+    {
+      loadData(adsIndex);
+      requiresDataLoad[adsIndex] = false;
+    }
+  }
 }

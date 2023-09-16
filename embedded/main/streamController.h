@@ -131,7 +131,7 @@ public:
             this,         /* parameter of the task */
             1,            /* priority of the task */
             &task,        /* Task handle to keep track of created task */
-            1);           /* pin task to core 0 */
+            1);           /* pin task to core 1 */
     }
 
     void addReading(int32_t &reading){

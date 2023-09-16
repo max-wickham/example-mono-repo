@@ -128,6 +128,8 @@ public:
     uint32_t spiTransferWord(uint16_t inputData = 0x0000);
     void spiCommFrame(int adsIndex, uint32_t *outPtr, uint16_t command = 0x0000, uint16_t data = 0x0000);
     int32_t twoCompDeco(uint32_t data);
+    void run();
 };
+
 
 #endif

@@ -6,6 +6,7 @@
 #include <HTTPClient.h>
 #include "esp_private/wifi.h"
 #include "esp_wifi.h"
+#include <WiFiUdp.h>
 
 #include <WebServer.h> // WebServer Library for ESP32
 // #include <ArduinoWebSocketsClient.h> // WebSocket Client Library for WebSocket
@@ -13,8 +14,8 @@
 #include "esp_wifi.h"
 
 // #define MAX_READINGS 16 * 250 * 4
-#define PACKET_SIZE 33
-#define MAX_READINGS PACKET_SIZE * 600
+#define PACKET_SIZE 480
+#define MAX_READINGS PACKET_SIZE * 3
 
 const std::string serverAddress = "165.22.123.190";
 const int serverPort = 8005;
@@ -22,6 +23,8 @@ const std::string route = "/sample/";
 // const char* test_message = "test message";
 uint8_t readingBuffer1[MAX_READINGS] = {0};
 uint8_t readingBuffer2[MAX_READINGS] = {0};
+
+WiFiUDP udp;
 
 class StreamController
 {
@@ -47,14 +50,21 @@ class StreamController
         {
             if (l_this->streaming)
             {
-                WiFiClient client;
-                HTTPClient http;
-                http.begin(client,  "http://165.22.123.190:8005/sample/12");
-                http.addHeader("Content-Type", "application/octet-stream");
-                int httpResponseCode = http.POST(l_this->streamingBuffer, MAX_READINGS);
-                Serial.println(httpResponseCode);
-
-                http.end();
+                // WiFiClient client;
+                // HTTPClient http;
+                // http.begin(client,  "http://165.22.123.190:8005/sample/12");
+                // http.addHeader("Content-Type", "application/octet-stream");
+                // int httpResponseCode = http.POST(l_this->streamingBuffer, MAX_READINGS);
+                // Serial.println(httpResponseCode);
+                // http.end();
+                uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
+                udp.beginPacket("165.22.123.190", 8888);
+                // Send the header packets
+                udp.write(0xAA);
+                udp.write(&(streamID[0]), 4);
+                // Send the data
+                udp.write(l_this->streamingBuffer,MAX_READINGS);
+                udp.endPacket();
                 // l_this->webSocket.sendBIN(l_this->streamingBuffer, MAX_READINGS);
             }
             l_this->streaming = false;

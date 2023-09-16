@@ -80,8 +80,15 @@
 #define ADS131_REGMAP_CRC 0x3E
 #define ADS131_RESERVED 0x3F
 
+#define OPEN_BCI
 #define NUM_CONVERSIONS_PER_FRAME 10
-#define DATA_BYTES_PER_CONVERSION (24 + 9) // add the OpenBCI protocol bytes
+#define NUM_CHANNELS 8
+#ifdef OPEN_BCI
+    #define DATA_BYTES_PER_CONVERSION (NUM_CHANNELS * 3 + 9) // add the OpenBCI protocol bytes
+#else
+    #define DATA_BYTES_PER_CONVERSION NUM_CHANNELS * 3
+#endif
+
 class ADS131M08 {
     public:
 

@@ -51,32 +51,39 @@
 
 
 
-import pickle
-import numpy as np
-import matplotlib.pyplot as plt
+# import pickle
+# import numpy as np
+# import matplotlib.pyplot as plt
 
 
 
-with open('data.pkl', 'rb') as file:
-    loaded_array = pickle.load(file)
+# with open('data.pkl', 'rb') as file:
+#     loaded_array = pickle.load(file)
 
 
-data = np.transpose(loaded_array)
+# data = np.transpose(loaded_array)
 
-fig, ax = plt.subplots(figsize=(10, 6))
+# fig, ax = plt.subplots(figsize=(10, 6))
 
-# Plot each stream on the same set of axes
-for i in range(8):
-    ax.plot(data[i], label=f'Stream {i + 1}')
+# # Plot each stream on the same set of axes
+# for i in range(8):
+#     ax.plot(data[i], label=f'Stream {i + 1}')
 
-# Add legend to distinguish between streams
-ax.legend()
+# # Add legend to distinguish between streams
+# ax.legend()
 
-# Add labels if needed
-plt.xlabel('Time')
-plt.ylabel('Value')
+# # Add labels if needed
+# plt.xlabel('Time')
+# plt.ylabel('Value')
 
-# Show the plot
-plt.show()
+# # Show the plot
+# plt.show()
 
-print(loaded_array.shape)
+# print(loaded_array.shape)
+
+
+import socket
+
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock.sendto(bytes('test message', "utf-8"), ("165.22.123.190", 8888))

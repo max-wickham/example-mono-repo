@@ -140,6 +140,9 @@ void ADS131M08::newFrame(void) // reset the data frame
 
 bool ADS131M08::frameReady(void) // return the frame ready flag
 {
+  if (frameReady){
+    Serial.println("Frame Ready");
+  }
   return frame_Ready;
 }
 
@@ -223,6 +226,7 @@ void ADS131_dataReadyISR(void)
 
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
+      Serial.print("F");
       frame_Ready = true;
     }
   }

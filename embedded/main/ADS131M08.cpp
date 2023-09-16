@@ -58,7 +58,7 @@ template <int adsIndex>
 void setADSCallbacks()
 {
   attachInterrupt(drdyPins[adsIndex-1], ADS131_dataReadyISR<adsIndex-1>, FALLING); // interrupt on
-  setADSCallbacks<adsIndex - 2>();
+  setADSCallbacks<adsIndex - 1>();
 }
 template <>
 void setADSCallbacks<1>()

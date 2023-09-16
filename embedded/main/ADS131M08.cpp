@@ -2,36 +2,42 @@
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
 
+#define loop_ads for (int adsIndex; adsIndex < NUM_ADS; adsIndex++)
+
 SPIClass ads_spi(ADS131_PORT);
 
 volatile static uint8_t ADS131_dataFrame[NUM_CONVERSIONS_PER_FRAME][DATA_BYTES_PER_CONVERSION];
 
-volatile uint32_t ADS131_statusFrame[NUM_CONVERSIONS_PER_FRAME];
-volatile uint32_t ADS131_CRCFrame[NUM_CONVERSIONS_PER_FRAME];
+volatile uint32_t ADS131_statusFrame[NUM_ADS][NUM_CONVERSIONS_PER_FRAME];
+volatile uint32_t ADS131_CRCFrame[NUM_ADS][NUM_CONVERSIONS_PER_FRAME];
 volatile uint8_t index_in_frame;
 volatile bool frame_Running = false;
 volatile bool frame_Ready = false;
 volatile bool frame_Overrun = false;
 volatile uint8_t sample_counter = 0;
 
-void ADS131_dataReadyISR(void);
+const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
+const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
+const int drdyPins[NUM_ADS] = ADS131_DRDY_PINS;
 
-ADS131M08::ADS131M08(void)
-{
-}
+void ADS131_dataReadyISR(void);
 
 void ADS131M08::begin(void)
 {
 
   uint32_t responseArr[10];
 
-  pinMode(ADS131_RESET_PIN, OUTPUT);
-  digitalWrite(ADS131_RESET_PIN, HIGH);
-  pinMode(ADS131_SSEL_PIN, OUTPUT);
-  digitalWrite(ADS131_SSEL_PIN, HIGH);
-  pinMode(ADS131_DRDY_PIN, INPUT_PULLUP);
+  loop_ads
+  {
+    pinMode(resetPins[adsIndex], OUTPUT);
+    digitalWrite(resetPins[adsIndex], HIGH);
+    pinMode(selectPins[adsIndex], OUTPUT);
+    digitalWrite(selectPins[adsIndex], HIGH);
+    pinMode(drdyPins[adsIndex], INPUT_PULLUP);
+  }
   pinMode(DEBUG_PIN, OUTPUT);
   digitalWrite(DEBUG_PIN, LOW);
+
   ads_spi.begin(ADS131_SCK_PIN, ADS131_MISO_PIN, ADS131_MOSI_PIN, 0);
 
   ads_spi.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE1));
@@ -40,21 +46,29 @@ void ADS131M08::begin(void)
   hw_reset();
 
   // dummy transfers to clear data buffer
-  spiCommFrame(&responseArr[0]);
-  spiCommFrame(&responseArr[0]);
-
+  loop_ads
+  {
+    spiCommFrame(adsIndex, &responseArr[0]);
+    spiCommFrame(adsIndex, &responseArr[0]);
+  }
   // Attach the ISR
-  attachInterrupt(ADS131_DRDY_PIN, ADS131_dataReadyISR, FALLING); // interrupt on each conversion
+  loop_ads
+  {
+    attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR, FALLING); // interrupt on each conversion
+  }
 }
 
 void ADS131M08::hw_reset() // Hardware Reset"
 {
-  Serial.println("HW Reset");
-  digitalWrite(ADS131_RESET_PIN, LOW);
-  delay(ADS131_RESET_PULSE);
-  digitalWrite(ADS131_RESET_PIN, HIGH);
-  delay(ADS131_RESET_DELAY);
-  delay(1); // time for registers to settle 1 ms
+  loop_ads
+  {
+    Serial.println("HW Reset");
+    digitalWrite(resetPins[adsIndex], LOW);
+    delay(ADS131_RESET_PULSE);
+    digitalWrite(resetPins[adsIndex], HIGH);
+    delay(ADS131_RESET_DELAY);
+    delay(1); // time for registers to settle 1 ms
+  }
 }
 
 void ADS131M08::startData(void) // Begin the filling of the data frame with conversions
@@ -103,71 +117,52 @@ void ADS131_dataReadyISR(void)
 {
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
-    digitalWrite(ADS131_SSEL_PIN, LOW);
-    // get the status data
-    ADS131_statusFrame[index_in_frame] = 0;
-    ADS131_statusFrame[index_in_frame] |= ads_spi.transfer(0x00) << 16;
-    ADS131_statusFrame[index_in_frame] |= ads_spi.transfer(0x00) << 8;
-    ADS131_statusFrame[index_in_frame] |= ads_spi.transfer(0x00);
 
 #ifdef OPEN_BCI
     // add the header byte
     ADS131_dataFrame[index_in_frame][0] = 0xA0;
     // add the sample number
     ADS131_dataFrame[index_in_frame][1] = sample_counter++;
-    const int offset = 2;
+    const int header_offset = 2;
 #else
-    const int offset = 0;
+    const int header_offset = 0;
 #endif
-    // channel 1
-    for (int index = 0; index < NUM_CHANNELS * 3; index++)
+    disAllADS();
+    loop_ads
     {
-      ADS131_dataFrame[index_in_frame][offset + index] = ads_spi.transfer(0x00);
-      ADS131_dataFrame[index_in_frame][offset + 1] = ads_spi.transfer(0x00);
-      ADS131_dataFrame[index_in_frame][offset + 2] = ads_spi.transfer(0x00);
-    }
-    ADS131_dataFrame[index_in_frame][offset] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 1] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 2] = ads_spi.transfer(0x00);
-    // channel 2
-    ADS131_dataFrame[index_in_frame][offset + 3] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 4] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 5] = ads_spi.transfer(0x00);
-    // channel 3
-    ADS131_dataFrame[index_in_frame][offset + 6] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 7] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][offset + 8] = ads_spi.transfer(0x00);
-    // channel 4
-    ADS131_dataFrame[index_in_frame][11] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][12] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][13] = ads_spi.transfer(0x00);
-    // channel 5
-    ADS131_dataFrame[index_in_frame][14] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][15] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][16] = ads_spi.transfer(0x00);
-    // channel 6
-    ADS131_dataFrame[index_in_frame][17] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][18] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][19] = ads_spi.transfer(0x00);
-    // channel 7
-    ADS131_dataFrame[index_in_frame][20] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][21] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][22] = ads_spi.transfer(0x00);
-    // channel 8
-    ADS131_dataFrame[index_in_frame][23] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][24] = ads_spi.transfer(0x00);
-    ADS131_dataFrame[index_in_frame][25] = ads_spi.transfer(0x00);
-    // get CRC
-    ADS131_CRCFrame[index_in_frame] = ads_spi.transfer(0x00) << 16;
-    ADS131_CRCFrame[index_in_frame] |= ads_spi.transfer(0x00) << 8;
-    ADS131_CRCFrame[index_in_frame] |= ads_spi.transfer(0x00);
-    // add the footer byte
-    ADS131_dataFrame[index_in_frame][32] = 0xC0;
+      disAllADS();
+      enADS(adsIndex);
+      // get the status data
 
-    digitalWrite(ADS131_SSEL_PIN, HIGH);
+      ADS131_statusFrame[adsIndex][index_in_frame] = 0;
+      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
+      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+      ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
+
+      for (int index = adsIndex * NUM_CHANNELS_PER_ADS * 3;
+           index < NUM_CHANNELS_PER_ADS * 3 + adsIndex * NUM_CHANNELS_PER_ADS * 3;
+           index++)
+      {
+        ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
+      }
+
+      // get CRC
+      ADS131_CRCFrame[adsIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
+      ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
+      ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
+      disAllADS();
+    }
+
+#ifdef OPEN_BCI
+    // add the footer byte
+    ADS131_dataFrame[index_in_frame][8 + NUM_ADS * NUM_CHANNELS_PER_ADS * 3] = 0xC0;
+#endif
+
     index_in_frame++;
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
+    {
       frame_Ready = true;
+    }
   }
   else
   {
@@ -175,95 +170,113 @@ void ADS131_dataReadyISR(void)
   }
 }
 
-uint16_t ADS131M08::NULL_STATUS(void)
+uint16_t ADS131M08::NULL_STATUS(int adsIndex)
 {
   Serial.println("Null Status");
   uint32_t responseArr[10];
   // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_NULL);
+  spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_NULL);
 
   // Read response
-  spiCommFrame(&responseArr[0]);
+  spiCommFrame(adsIndex, &responseArr[0]);
 
   return responseArr[0] >> 16;
 }
 
-bool ADS131M08::RESET(void)
+bool ADS131M08::RESET()
 {
-  Serial.println("SW Reset");
-  uint32_t responseArr[10];
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_RESET);
-  delay(1); // time for registers to settle
+  loop_ads
+  {
+    Serial.println("SW Reset");
+    uint32_t responseArr[10];
+    // Use first frame to send command
+    spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_RESET);
+    delay(1); // time for registers to settle
 
-  // Read response
-  spiCommFrame(&responseArr[0]);
+    // Read response
+    spiCommFrame(adsIndex, &responseArr[0]);
 
-  if ((responseArr[0] >> 16) == 0xff28)
-    return true;
-  else
-    return false;
+    if ((responseArr[0] >> 16) == 0xff28)
+      return true;
+    else
+      return false;
+  }
 }
 
-void ADS131M08::STANDBY(void)
+void ADS131M08::STANDBY()
 {
-  uint32_t responseArr[10];
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_STANDBY);
+  loop_ads
+  {
+    uint32_t responseArr[10];
+    // Use first frame to send command
+    spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_STANDBY);
 
-  // Read response
-  spiCommFrame(&responseArr[0]);
+    // Read response
+    spiCommFrame(adsIndex, &responseArr[0]);
 
 #ifndef ADS131_POLLING
-  // Detach the ISR
-  detachInterrupt(ADS131_DRDY_PIN);
+    // Detach the ISR
+    loop_ads
+    {
+      detachInterrupt(drdyPins[adsIndex]);
+    }
 #endif
-
+  }
   return;
 }
 
-void ADS131M08::WAKEUP(void)
+void ADS131M08::WAKEUP()
 {
-  uint32_t responseArr[10];
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_WAKEUP);
+  loop_ads
+  {
+    uint32_t responseArr[10];
+    // Use first frame to send command
+    spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_WAKEUP);
 
-  // Read response
-  spiCommFrame(&responseArr[0]);
+    // Read response
+    spiCommFrame(adsIndex, &responseArr[0]);
 
 #ifndef ADS131_POLLING
-  // Attach the ISR
-  attachInterrupt(ADS131_DRDY_PIN, ADS131_dataReadyISR, FALLING);
+    // Attach the ISR
+    loop_ads
+    {
+      attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR, FALLING);
+    }
 #endif
-
+  }
   return;
 }
 
-void ADS131M08::LOCK(void)
+void ADS131M08::LOCK()
 {
-  uint32_t responseArr[10];
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_LOCK);
+  loop_ads
+  {
+    uint32_t responseArr[10];
+    // Use first frame to send command
+    spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_LOCK);
 
-  // Read response
-  spiCommFrame(&responseArr[0]);
-
+    // Read response
+    spiCommFrame(adsIndex, &responseArr[0]);
+  }
   return;
 }
 
-void ADS131M08::UNLOCK(void)
+void ADS131M08::UNLOCK()
 {
-  uint32_t responseArr[10];
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], ADS131_CMD_UNLOCK);
+  loop_ads
+  {
+    uint32_t responseArr[10];
+    // Use first frame to send command
+    spiCommFrame(adsIndex, &responseArr[0], ADS131_CMD_UNLOCK);
 
-  // Read response
-  spiCommFrame(&responseArr[0]);
+    // Read response
+    spiCommFrame(adsIndex, &responseArr[0]);
+  }
 
   return;
 }
 
-bool ADS131M08::globalChop(bool enabled, uint8_t log2delay)
+bool ADS131M08::globalChop(int adsIndex, bool enabled, uint8_t log2delay)
 {
   /* Function to configure global chop mode for the ADS131M04.
 
@@ -281,41 +294,42 @@ bool ADS131M08::globalChop(bool enabled, uint8_t log2delay)
   uint8_t delayRegData = log2delay - 1;
 
   // Get current settings for current detect mode from the CFG register
-  uint16_t currentDetSett = (readReg(ADS131_CFG) << 8) >> 8;
+  uint16_t currentDetSett = (readReg(adsIndex, ADS131_CFG) << 8) >> 8;
 
   uint16_t newRegData = (delayRegData << 12) + (enabled << 8) + currentDetSett;
 
-  return writeReg(ADS131_CFG, newRegData);
+  return writeReg(adsIndex, ADS131_CFG, newRegData);
 }
 
-bool ADS131M08::writeReg(uint16_t reg, uint16_t data)
+bool ADS131M08::writeReg(int adsIndex, uint16_t reg, uint16_t data)
 {
-  /* Writes the content of data to the register reg
-      Returns true if successful
-  */
-
-  // Make command word using syntax found in data sheet
-  uint16_t commandWord = ADS131_CMD_WREG + (reg << 7);
-
-  uint32_t responseArr[10];
-
-  // Use first frame to send command
-  spiCommFrame(&responseArr[0], commandWord, data);
-
-  // Get response
-  spiCommFrame(&responseArr[0]);
-
-  if (((0x04 << 12) + (reg << 7)) == responseArr[0])
+  bool result = true;
+  for (int ads_index = 0; ads_index < NUM_ADS; ads_index++)
   {
-    return true;
+    /* Writes the content of data to the register reg
+        Returns true if successful
+    */
+
+    // Make command word using syntax found in data sheet
+    uint16_t commandWord = ADS131_CMD_WREG + (reg << 7);
+
+    uint32_t responseArr[10];
+
+    // Use first frame to send command
+    spiCommFrame(ads_index, &responseArr[0], commandWord, data);
+
+    // Get response
+    spiCommFrame(ads_index, &responseArr[0]);
+
+    if (!(((0x04 << 12) + (reg << 7)) == responseArr[0]))
+    {
+      result = false;
+    }
   }
-  else
-  {
-    return false;
-  }
+  return result;
 }
 
-uint16_t ADS131M08::readReg(uint16_t reg)
+uint16_t ADS131M08::readReg(int adsIndex, uint16_t reg)
 {
   /* Reads the content of single register found at address reg
       Returns register value
@@ -326,10 +340,10 @@ uint16_t ADS131M08::readReg(uint16_t reg)
 
   uint32_t responseArr[10];
   // Use first frame to send command
-  spiCommFrame(&responseArr[0], commandWord);
+  spiCommFrame(adsIndex, &responseArr[0], commandWord);
 
   // Read response
-  spiCommFrame(&responseArr[0]);
+  spiCommFrame(adsIndex, &responseArr[0]);
 
   return responseArr[0] >> 16;
 }
@@ -349,11 +363,10 @@ uint32_t ADS131M08::spiTransferWord(uint16_t inputData)
   return data << 8;
 }
 
-void ADS131M08::spiCommFrame(uint32_t *outPtr, uint16_t command, uint16_t data)
+void ADS131M08::spiCommFrame(int adsIndex, uint32_t *outPtr, uint16_t command, uint16_t data)
 {
   // Saves all the data of a communication frame to an array with pointer outPtr
-
-  digitalWrite(ADS131_SSEL_PIN, LOW);
+  enADS(adsIndex);
   // Serial.print("Send: ");
   // Serial.print(command,HEX);
   // Serial.print(", ");
@@ -386,8 +399,7 @@ void ADS131M08::spiCommFrame(uint32_t *outPtr, uint16_t command, uint16_t data)
   *outPtr = spiTransferWord();
   // Serial.print(*outPtr,HEX);
   // Serial.println(";  ");
-
-  digitalWrite(ADS131_SSEL_PIN, HIGH);
+  disAllADS();
 }
 
 bool ADS131M08::setGain(int gain)
@@ -429,8 +441,30 @@ bool ADS131M08::setGain(int gain)
   {
     return false;
   }
-  writeReg(ADS131_GAIN1, writegain);
-  writeReg(ADS131_GAIN2, writegain);
+  loop_ads
+  {
+    writeReg(adsIndex, ADS131_GAIN1, writegain);
+    writeReg(adsIndex, ADS131_GAIN2, writegain);
+  }
 
   return true;
+}
+
+void enADS(int adsIndex)
+{
+  digitalWrite(selectPins[adsIndex], LOW);
+}
+void enAllADS()
+{
+  loop_ads
+  {
+    digitalWrite(selectPins[adsIndex], LOW);
+  }
+}
+void disAllADS()
+{
+  loop_ads
+  {
+    digitalWrite(selectPins[adsIndex], HIGH);
+  }
 }

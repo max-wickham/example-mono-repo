@@ -1,8 +1,7 @@
 #ifndef ADS131M08_H
 #define ADS131M08_H
-//ADS131M08.cpp LGPL
-//Adapted for the 8 channel device from https://github.com/icl-rocketry/ADS131M04-Lib (LGPL)
-
+// ADS131M08.cpp LGPL
+// Adapted for the 8 channel device from https://github.com/icl-rocketry/ADS131M04-Lib (LGPL)
 
 /* Definitions of all the addresses of the registers of the ADS131M04
    Chip. For the content of the registers, please refer to the datasheet:
@@ -15,15 +14,16 @@
 
 #include <Arduino.h>
 #include <SPI.h>
+#include <initializer_list>
 
-#define ADS131_CMD_NULL       0x0000
-#define ADS131_CMD_RESET      0x0011
-#define ADS131_CMD_STANDBY    0x0022
-#define ADS131_CMD_WAKEUP     0x0033
-#define ADS131_CMD_LOCK       0x0555
-#define ADS131_CMD_UNLOCK     0x0655
-#define ADS131_CMD_RREG       0xa000
-#define ADS131_CMD_WREG       0x6000
+#define ADS131_CMD_NULL 0x0000
+#define ADS131_CMD_RESET 0x0011
+#define ADS131_CMD_STANDBY 0x0022
+#define ADS131_CMD_WAKEUP 0x0033
+#define ADS131_CMD_LOCK 0x0555
+#define ADS131_CMD_UNLOCK 0x0655
+#define ADS131_CMD_RREG 0xa000
+#define ADS131_CMD_WREG 0x6000
 
 #define ADS131_ID 0x00
 #define ADS131_STATUS 0x01
@@ -76,58 +76,58 @@
 #define ADS131_CH7_GCAL_MSB 0x2F
 #define ADS131_CH7_GCAL_LSB 0x30
 
-
 #define ADS131_REGMAP_CRC 0x3E
 #define ADS131_RESERVED 0x3F
 
-#define OPEN_BCI
+// #define OPEN_BCI // Remove if not using the OpenBCI protocol
+
+#define NUM_ADS 1
 #define NUM_CONVERSIONS_PER_FRAME 10
-#define NUM_CHANNELS 8
+#define NUM_CHANNELS_PER_ADS 8
+
 #ifdef OPEN_BCI
-    #define DATA_BYTES_PER_CONVERSION (NUM_CHANNELS * 3 + 9) // add the OpenBCI protocol bytes
+#define DATA_BYTES_PER_CONVERSION (NUM_CHANNELS_PER_ADS * 3 * NUM_ADS + 9) // add the OpenBCI protocol bytes
 #else
-    #define DATA_BYTES_PER_CONVERSION NUM_CHANNELS * 3
+#define DATA_BYTES_PER_CONVERSION NUM_CHANNELS_PER_ADS * 3 * NUM_ADS
 #endif
 
-class ADS131M08 {
-    public:
+class ADS131M08
+{
+private:
 
-
-
-
-
-
-    ADS131M08(void);
+public:
+    ADS131M08::ADS131M08()
+    {
+    }
     void begin(void);
     void hw_reset();
     // System Commands
-    uint16_t NULL_STATUS(void);
-    bool RESET(void);
-    void STANDBY(void);
-    void WAKEUP(void);
+    uint16_t NULL_STATUS(int adsIndex);
+    bool RESET();
+    void STANDBY();
+    void WAKEUP();
     void LOCK();
-    void UNLOCK(void);
+    void UNLOCK();
 
     // Register Read/Write Commands
-    bool writeReg(uint16_t reg, uint16_t data);
-    uint16_t readReg(uint16_t reg);
+    bool writeReg(int adsIndex, uint16_t reg, uint16_t data);
+    uint16_t readReg(int adsIndex, uint16_t reg);
 
-    //Data Read functions
-    //bool getData(int32_t *buffer);
-    void startData(void); // Begin the filling of the data frame with conversions
-    void stopData(void); // Stop the filling of the data frame with cinversions
-    void newFrame(void); // reset the data frame
-    bool frameReady(void); // return the frame ready flag
-    uint16_t frameSize(void); // return the size of the data frame
-    uint8_t* framePointer(void); // return a pointer to the data frame
+    // Data Read functions
+    // bool getData(int32_t *buffer);
+    void startData(void);        // Begin the filling of the data frame with conversions
+    void stopData(void);         // Stop the filling of the data frame with cinversions
+    void newFrame(void);         // reset the data frame
+    bool frameReady(void);       // return the frame ready flag
+    uint16_t frameSize(void);    // return the size of the data frame
+    uint8_t *framePointer(void); // return a pointer to the data frame
 
     // Functions for setup and data retrieval
-    bool globalChop(bool enabled, uint8_t log2delay);
+    bool globalChop(int adsIndex, bool enabled, uint8_t log2delay);
     bool setGain(int gain);
     uint32_t spiTransferWord(uint16_t inputData = 0x0000);
-    void spiCommFrame(uint32_t * outPtr, uint16_t command = 0x0000, uint16_t data = 0x0000);
+    void spiCommFrame(int adsIndex, uint32_t *outPtr, uint16_t command = 0x0000, uint16_t data = 0x0000);
     int32_t twoCompDeco(uint32_t data);
-
 };
 
 #endif

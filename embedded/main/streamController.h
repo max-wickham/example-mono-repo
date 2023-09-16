@@ -28,8 +28,8 @@ WiFiUDP udp;
 
 class StreamController
 {
+    static const int sessionID = 12;
     WebSocketsClient webSocket; // websocket client class instance
-    int sessionID = 12;
 
     int readingIndex = 0;
 
@@ -57,11 +57,12 @@ class StreamController
                 // int httpResponseCode = http.POST(l_this->streamingBuffer, MAX_READINGS);
                 // Serial.println(httpResponseCode);
                 // http.end();
-                uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
+                // uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
                 udp.beginPacket("165.22.123.190", 8888);
                 // Send the header packets
                 udp.write(0xAA);
-                udp.write(&(streamID[0]), 4);
+                // udp.write(&(streamID[0]), 4);
+                udp.write((uint8_t *)(&sessionID), 4);
                 // Send the data
                 udp.write(l_this->streamingBuffer,MAX_READINGS);
                 udp.endPacket();

@@ -55,9 +55,11 @@
 #define ADS131_MOSI_PIN    13
 #define ADS131_MISO_PIN    12
 #define ADS131_SCK_PIN     14
-#define ADS131_SSEL_PIN    15
-#define ADS131_RESET_PIN   17
-#define ADS131_DRDY_PIN    25
+
+#define ADS131_SELECT_PINS    {15}
+#define ADS131_RESET_PINS     {17}
+#define ADS131_DRDY_PINS      {25}
+
 #define ADS131_RESET_PULSE 1
 #define ADS131_RESET_DELAY 1
 

@@ -16,7 +16,9 @@ volatile bool frame_Ready = false;
 volatile bool frame_Overrun = false;
 volatile uint8_t sample_counter = 0;
 
+// Has received data since the last index_in_frame increment
 volatile bool receivedFrame[NUM_ADS] = {false};
+// Interrupt flag
 volatile bool requiresDataLoad[NUM_ADS] = {false};
 
 const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
@@ -48,20 +50,28 @@ void disAllADS()
   }
 }
 
+/*
+ * Interrupt that gets called when DRDY goes HIGH.
+ * Transfers data and sets a flag.
+ */
 template <int adsCallbackIndex>
-void ADS131_dataReadyISR(void);
+void ADS131_dataReadyISR(void)
+{
+  // Make a request to load data
+  requiresDataLoad[adsCallbackIndex] = true;
+}
 
-// !!!! Careful Super hacky way to do this, uses recursive template to define callbacks for each of ads's
-// Initiated by running setADSCallbacks(); !!!!!
+/*
+!!! Careful really hacky way to do this using recursive templates
+!!! Should be run be calling setADSCallbacks(),
+    which will set the callback for each ADS at compile time
+*/
 template <int adsNumber>
 void setADSCallbacksTemplate()
 {
-  // Don't manually run me
   attachInterrupt(drdyPins[adsNumber - 1], ADS131_dataReadyISR<adsNumber - 1>, FALLING);
   if constexpr (adsNumber > 1)
-  {
     setADSCallbacksTemplate<adsNumber - 1>();
-  }
 }
 #define setADSCallbacks setADSCallbacksTemplate<NUM_ADS>
 
@@ -97,14 +107,9 @@ void ADS131M08::begin(void)
 
   // Attach the ISR
   setADSCallbacks();
-  // attachInterrupt(drdyPins[0], ADS131_dataReadyISR<0>, FALLING); // interrupt on
-  // loop_ads
-  // {
-  //   attachInterrupt(drdyPins[adsIndex], ADS131_dataReadyISR<adsIndex>, FALLING); // interrupt on each conversion
-  // }
 }
 
-void ADS131M08::hw_reset() // Hardware Reset"
+void ADS131M08::hw_reset() // Hardware Reset
 {
   loop_ads
   {
@@ -157,17 +162,6 @@ uint16_t ADS131M08::frameSize(void) // return the size of the data frame
 uint8_t *ADS131M08::framePointer(void) // return a pointer to the data frame
 {
   return (uint8_t *)&ADS131_dataFrame[0][0];
-}
-
-/*
- * Interrupt that gets called when DRDY goes HIGH.
- * Transfers data and sets a flag.
- */
-template <int adsCallbackIndex>
-void ADS131_dataReadyISR(void)
-{
-  // Make a request to load data
-  requiresDataLoad[adsCallbackIndex] = true;
 }
 
 uint16_t ADS131M08::NULL_STATUS(int adsIndex)
@@ -314,11 +308,7 @@ bool ADS131M08::writeReg(int adsIndex, uint16_t reg, uint16_t data)
   // Get response
   spiCommFrame(adsIndex, &responseArr[0]);
 
-  if (!(((0x04 << 12) + (reg << 7)) == responseArr[0]))
-  {
-    result = false;
-  }
-  return result;
+  return ((0x04 << 12) + (reg << 7)) == responseArr[0];
 }
 
 uint16_t ADS131M08::readReg(int adsIndex, uint16_t reg)
@@ -450,9 +440,10 @@ void loadData(int adsIndex)
   const int header_offset = 0;
 #endif
 
-  // Serial.println("Interrupt Triggered");
+  Serial.println("Interrupt Triggered");
   Serial.print("ADS Index: ");
   Serial.println(adsIndex);
+
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
     receivedFrame[adsIndex] = true;
@@ -463,6 +454,7 @@ void loadData(int adsIndex)
     ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 16;
     ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_statusFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
+
     // get the frame data
     for (int index = adsIndex * NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT;
          index < NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT + adsIndex * NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT;
@@ -470,18 +462,21 @@ void loadData(int adsIndex)
     {
       ADS131_dataFrame[index_in_frame][header_offset + index] = ads_spi.transfer(0x00);
     }
+
     // get CRC
     ADS131_CRCFrame[adsIndex][index_in_frame] = ads_spi.transfer(0x00) << 16;
     ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00) << 8;
     ADS131_CRCFrame[adsIndex][index_in_frame] |= ads_spi.transfer(0x00);
 
     disADS(adsIndex);
+
     bool allFramesReceived = true;
     loop_ads
     {
       Serial.println(receivedFrame[adsIndex]);
       allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
     }
+
     if (allFramesReceived)
     {
       // Set header and footer if needed
@@ -499,7 +494,7 @@ void loadData(int adsIndex)
       }
       index_in_frame++;
     }
-    Serial.println("Index Ind frame");
+    Serial.println("Index in frame");
     Serial.println(index_in_frame);
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {

@@ -7,15 +7,13 @@
 #include "esp_private/wifi.h"
 #include "esp_wifi.h"
 #include <WiFiUdp.h>
+#include "ADS131M08.h"
 
 #include <WebServer.h> // WebServer Library for ESP32
-// #include <ArduinoWebSocketsClient.h> // WebSocket Client Library for WebSocket
 #include <WebSocketsClient.h>
-#include "esp_wifi.h"
 
-// #define MAX_READINGS 16 * 250 * 4
-#define PACKET_SIZE 480
-#define MAX_READINGS PACKET_SIZE * 3
+#define FRAME_SIZE (NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT * NUM_CONVERSIONS_PER_FRAME * NUM_ADS)
+#define MAX_READINGS FRAME_SIZE * 3
 
 const std::string serverAddress = "165.22.123.190";
 const int serverPort = 8005;

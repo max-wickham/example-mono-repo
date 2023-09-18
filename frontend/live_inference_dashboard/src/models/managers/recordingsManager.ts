@@ -16,19 +16,4 @@ export default {
         }
     },
 
-    sendRecording: async function (recording: ArrayBuffer, gestureID: string) {
-        try {
-            const blob = new Blob([recording]);
-            await RecordingUploadsService.postRecordingRecordingGestureIdPost(
-                gestureID,
-                {
-                    recording: blob
-                }
-            );
-            await this.getGestures();
-        } catch {
-            console.log('Recording upload failed')
-        }
-    }
-
 }

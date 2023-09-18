@@ -1,60 +1,30 @@
+#ifndef DEV_BLUETOOTH_CONTROLLER
+#define DEV_BLUETOOTH_CONTROLLER
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <EEPROM.h>
+#include <unordered_map>
 
-#include "dataManager.h"
+// Server Characteristics
+#define SERVER_SERVICE "b9908bbc-de94-42fb-952a-b4593d12ebd1"
+#define SERVER_MESSAGE "99497f04-e714-476e-9f2b-087785ba0315"
+#define SERVER_CURRENT_ENDPOINT "1fcdb326-0779-4aed-b50b-d0b21e00c277"
+#define SERVER_FILENAME "80e11a85-32ff-4df0-b03b-6212b71d8f49"
 
-#define READING_SERVICE "99497f04-e714-476e-9f2b-087785ba0315"
-#define CURRENT_READING_CHARACTERISTIC "8018a468-562c-4b09-9b7c-60935f0b26c4"
+// Client Characteristics
+#define CLIENT_SERVICE "ce2bd191-c2b9-4e02-964c-0a0bd7e421da"
+#define CLIENT_MESSAGE "b44c49de-4751-439c-8ea7-c3bc2516aa3c"
+#define CLIENT_CURRENT_ENDPOINT "7f853ef2-ba92-4c0a-bf53-b7dd876f0153"
+#define CLIENT_RECEIVING "58813e28-4aa6-4e99-abf7-d5f198cfd819"
 
-#define RECORDING_STATE_SERVICE "2c6c0afb-030c-42d1-88e0-950616111bdc"
-#define RECORDING_STATE_CHARACTERISTIC "1fcdb326-0779-4aed-b50b-d0b21e00c277"
-#define RECORDING_REQUEST_CHARACTERISTIC "765c0ac1-ed04-48af-997a-dc56d3dad788"
+#define RX_SERVICE "d03e19c1-457e-456c-b1d1-48f335302858"
+#define CLIENT_RX "2aa577c5-a852-487c-8e01-1237a093a0be"
 
-#define DOWNLOAD_SERVICE "b44c49de-4751-439c-8ea7-c3bc2516aa3c"
-#define DOWNLOAD_REQUEST_CHARACTERISTIC "7f853ef2-ba92-4c0a-bf53-b7dd876f0153"
-#define DOWNLOAD_PROGRESS_CHARACTERISTIC "fddd103d-55d8-4d92-be4f-09c8b56280ef"
-#define HASH_CHARACTERISTIC "f45bb166-b718-4f3e-865c-c9804a06f6b5"
-#define TX_CHARACTERISTIC "4463d9f3-911d-424f-ab17-af0ebc9ef236"
+#define PACKET_SIZE 200
 
-class DevBluetoothController;
-/*
-This is the recording state of the ESP32, synced to the client using bluetooth characteristic
-*/
-enum RecordingState
-{
-    RSNotRecording,
-    RSInProgress,
-    RSComplete,
-};
-
-/*
-This is used by the client to send state requests to the ESP32 in order to control the recording state
-*/
-enum RecordingStateRequest
-{
-    RSRStartRequested,
-    RSRStopRequested,
-};
-
-/*
-This is the download state of the server, (showing whether an upload to the client is in progress)
-*/
-enum DownloadState
-{
-    DSStopped,
-    DSInProgress,
-    DSComplete,
-};
-
-/*
-This is used be the client to send state requests to the ESP32 in order to control the recording download state
-*/
-enum DownloadStateRequest
-{
-    DSRStartRequested,
-    DSRNotRequested,
-};
+char packet[PACKET_SIZE] = {0};
 
 class ServerCallbacks : public BLEServerCallbacks
 {
@@ -68,343 +38,214 @@ class ServerCallbacks : public BLEServerCallbacks
     }
 };
 
-int bytesToInt(std::string value)
+class MessageCallbacks
 {
-    int intValue = 0;
-    if (value.length() == 4)
-    {
-        intValue = value[0] | (value[1] << 8) | (value[2] << 16) | (value[3] << 24);
-    }
-    return intValue;
-}
-
-class BluetoothStateChangeCallbacks
-{
-    public:
-
-    virtual void recordingStateRequestChangeCallback(RecordingStateRequest &state)
-    {
-        Serial.println(state);
-        Serial.println("No Callback Set");
-    }
-
-    virtual void downloadStateRequestChangeCallback(DownloadStateRequest &state)
-    {
-        Serial.println(state);
-        Serial.println("No Callback Set");
-    }
-};
-
-class RecordingStateRequestCallbacks : public BLECharacteristicCallbacks
-{
-    /*
-    The data received here is a RecordingStateRequest and tells the ESP32 to start or stop recording
-    */
-    void onWrite(BLECharacteristic *pCharacteristic);
-
-    void onRead(BLECharacteristic *pCharacteristic)
-    {
-        // handle the read operation
-    }
 
 public:
-
-    DevBluetoothController *controller;
-    BluetoothStateChangeCallbacks *callbacks;
-
-
-public:
-    RecordingStateRequestCallbacks(DevBluetoothController *controller, BluetoothStateChangeCallbacks *callbacks )
-    {
-        this->controller = controller;
-        this->callbacks = callbacks;
-    }
+    virtual void callback(std::string message) = 0;
 };
 
-class DownloadStateRequestCallbacks : public BLECharacteristicCallbacks
-{
-    /*
-    The data received here is a DownloadStateRequest and tells the ESP32 to start or stop sending recordings to the client
-    */
-    void onWrite(BLECharacteristic *pCharacteristic);
-
-    void onRead(BLECharacteristic *pCharacteristic)
-    {
-        // handle the read operation
-    }
-
-public:
-    DevBluetoothController *controller;
-    BluetoothStateChangeCallbacks *callbacks;
-
-    DownloadStateRequestCallbacks(DevBluetoothController *controller, BluetoothStateChangeCallbacks *callbacks )
-    {
-        this->controller = controller;
-        this->callbacks = callbacks;
-    }
-};
-
-// BLECharacteristic bmeHumidityCharacteristics(CURRENT_READING_CHARACTERISTIC, BLECharacteristic::PROPERTY_NOTIFY);
 class DevBluetoothController
 {
-    friend class RecordingStateRequestCallbacks;
-    friend class DownloadStateRequestCallbacks;
+    class ServerCharCallbacks : public BLECharacteristicCallbacks
+    {
+    protected:
+        virtual void onWrite(BLECharacteristic *pCharacteristic) = 0;
+
+        void onRead(BLECharacteristic *pCharacteristic)
+        {
+            // handle the read operation
+        }
+        DevBluetoothController *controller;
+
+    public:
+        ServerCharCallbacks(DevBluetoothController *controller)
+        {
+            this->controller = controller;
+        }
+    };
+    class ServerMessageCallbacks : public ServerCharCallbacks
+    {
+        using ServerCharCallbacks::ServerCharCallbacks;
+        void onWrite(BLECharacteristic *pCharacteristic);
+    };
+
+    class ServerFileNameCallbacks : public ServerCharCallbacks
+    {
+        using ServerCharCallbacks::ServerCharCallbacks;
+        void onWrite(BLECharacteristic *pCharacteristic);
+    };
+
+    struct
+    {
+        bool uploading = false;
+        int file_state_address = 0;
+        int file_index = 0;
+        int file_length = 0;
+    } upload_state;
+
+    std::unordered_map<std::string, MessageCallbacks *> message_callbacks;
+
+    std::unordered_map<std::string, int> file_locations;
 
     BLEServer *pServer;
-    BLEService *reading_service;
-    // Gives the client access to the current sensor reading
-    BLECharacteristic *current_reading_characteristic;
-
-    BLEService *recording_state_service;
-    // Tells the client the current recording state (stopped, in progress or complete)
-    BLECharacteristic *recording_state_characteristic;
-    // Used by the client to requests recording state changes
-    BLECharacteristic *recording_request_characteristic;
-
-    BLEService *recording_download_service;
-    // Current state of recording upload to the client
-    BLECharacteristic *download_request_characteristic;
-    // Used by the client to request recording downloads
-    BLECharacteristic *download_state_progress_characteristic;
-    // The expected hash of the current recording, read by the client to ensure successful download
-    BLECharacteristic *recording_hash_characteristic;
-    // The TX channel over which recordings are sent
-    BLECharacteristic *tx_characteristic;
+    BLEService *server_service;
+    BLECharacteristic *server_message_char;
+    BLECharacteristic *server_current_endpoint_char;
+    BLECharacteristic *server_filename_char;
+    BLEService *client_service;
+    BLECharacteristic *client_message_char;
+    BLECharacteristic *client_current_endpoint_char;
+    BLECharacteristic *client_receiving_char;
+    BLEService *rx_service;
+    BLECharacteristic *client_rx_char;
+    ServerMessageCallbacks *server_message_callbacks = new ServerMessageCallbacks(this);
+    ServerFileNameCallbacks *server_filename_callbacks = new ServerFileNameCallbacks(this);
 
     BLEAdvertising *pAdvertising;
-    // This callback is run when the client requests a recording state change and can be set in the main script
-    BluetoothStateChangeCallbacks *state_change_callbacks = new BluetoothStateChangeCallbacks();
-    RecordingStateRequestCallbacks *recording_state_change_callbacks = new RecordingStateRequestCallbacks(this, this->state_change_callbacks);
-    DownloadStateRequestCallbacks *download_state_change_callbacks = new DownloadStateRequestCallbacks(this, this->state_change_callbacks);
-    RecordingState currentRecordingState = RSNotRecording;
-    DownloadState currentDownloadState = DSStopped;
 
-    DataManager *dataManager;
-
-    void _setDownloadProgressState(DownloadState state)
+    void configure_characteristic(BLEService *service, BLECharacteristic *&characteristic, uint32_t properties, char *uuid)
     {
-        currentDownloadState = state;
-        int data = static_cast<int>(currentDownloadState);
-        download_state_progress_characteristic->setValue(data);
-        download_state_progress_characteristic->notify();
+        characteristic = service->createCharacteristic(
+            uuid,
+            properties);
+        BLEDescriptor *descriptor = new BLEDescriptor(BLEUUID(uuid));
+        characteristic->addDescriptor(descriptor);
     }
 
 public:
-    DevBluetoothController(DataManager *dataManager)
-    {
-        dataManager = dataManager;
-    }
-
     void setup()
     {
         BLEDevice::init("MindFeed");
         pServer = BLEDevice::createServer();
         pServer->setCallbacks(new ServerCallbacks());
-        Serial.println("Server Made");
 
-        ///// Reading Service
-        reading_service = pServer->createService(READING_SERVICE);
-        current_reading_characteristic = reading_service->createCharacteristic(
-            CURRENT_READING_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *current_reading_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2902));
-        current_reading_characteristic->addDescriptor(current_reading_characteristic_descriptor);
+        // Server Service
+        const uint32_t server_props = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_BROADCAST | BLECharacteristic::PROPERTY_INDICATE | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE;
+        server_service = pServer->createService(SERVER_SERVICE);
+        configure_characteristic(server_service, server_message_char, server_props, SERVER_MESSAGE);
+        configure_characteristic(server_service, server_current_endpoint_char, server_props, SERVER_CURRENT_ENDPOINT);
+        configure_characteristic(server_service, server_filename_char, server_props, SERVER_FILENAME);
+        server_message_char->setCallbacks(server_message_callbacks);
+        server_filename_char->setCallbacks(server_filename_callbacks);
 
-        ///// Recording Control service
-        recording_state_service = pServer->createService(RECORDING_STATE_SERVICE);
+        // Client Service
+        client_service = pServer->createService(CLIENT_SERVICE);
+        const uint32_t client_props = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_BROADCAST | BLECharacteristic::PROPERTY_INDICATE | BLECharacteristic::PROPERTY_NOTIFY;
+        configure_characteristic(client_service, client_message_char, client_props, CLIENT_MESSAGE);
+        configure_characteristic(client_service, client_current_endpoint_char, client_props, CLIENT_CURRENT_ENDPOINT);
+        configure_characteristic(client_service, client_receiving_char, client_props, CLIENT_RECEIVING);
 
-        recording_state_characteristic = recording_state_service->createCharacteristic(
-            RECORDING_STATE_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *recording_state_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2903));
-        recording_state_characteristic->addDescriptor(recording_state_characteristic_descriptor);
+        //RX Service
+        rx_service = pServer->createService(RX_SERVICE);
+        configure_characteristic(rx_service, client_rx_char, client_props, CLIENT_RX);
 
-        recording_request_characteristic = recording_state_service->createCharacteristic(
-            RECORDING_REQUEST_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *recording_request_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2904));
-        recording_request_characteristic->addDescriptor(recording_request_characteristic_descriptor);
-        recording_request_characteristic->setCallbacks(recording_state_change_callbacks);
-        // recording_request_characteristic->(_recording_state_request_callback);
+        // Add the stored general service items
 
-        ///// Download Service
-        recording_download_service = pServer->createService(DOWNLOAD_SERVICE);
+        server_service->start();
+        client_service->start();
+        server_service->start();
 
-        download_request_characteristic = recording_download_service->createCharacteristic(
-            DOWNLOAD_REQUEST_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *download_request_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2905));
-        download_request_characteristic->addDescriptor(download_request_characteristic_descriptor);
-        download_request_characteristic->setCallbacks(download_state_change_callbacks);
-
-        download_state_progress_characteristic = recording_download_service->createCharacteristic(
-            DOWNLOAD_PROGRESS_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *download_state_progress_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2906));
-        download_state_progress_characteristic->addDescriptor(download_state_progress_characteristic_descriptor);
-
-        recording_hash_characteristic = recording_download_service->createCharacteristic(
-            HASH_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *recording_hash_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2907));
-        recording_hash_characteristic->addDescriptor(recording_hash_characteristic_descriptor);
-
-        tx_characteristic = recording_download_service->createCharacteristic(
-            TX_CHARACTERISTIC,
-            BLECharacteristic::PROPERTY_READ |
-                BLECharacteristic::PROPERTY_WRITE |
-                BLECharacteristic::PROPERTY_BROADCAST |
-                BLECharacteristic::PROPERTY_INDICATE |
-                BLECharacteristic::PROPERTY_NOTIFY);
-        BLEDescriptor *tx_characteristic_descriptor = new BLEDescriptor(BLEUUID((uint32_t)0x2908));
-        tx_characteristic->addDescriptor(tx_characteristic_descriptor);
-
-        reading_service->start();
-        recording_state_service->start();
-        recording_download_service->start();
-        // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
         pAdvertising = BLEDevice::getAdvertising();
-        pAdvertising->addServiceUUID(READING_SERVICE);
-        pAdvertising->addServiceUUID(RECORDING_STATE_SERVICE);
-        pAdvertising->addServiceUUID(DOWNLOAD_SERVICE);
+        pAdvertising->addServiceUUID(SERVER_SERVICE);
+        pAdvertising->addServiceUUID(CLIENT_SERVICE);
+        pAdvertising->addServiceUUID(RX_SERVICE);
         pAdvertising->setScanResponse(true);
         pAdvertising->setMinPreferred(0x06); // functions that help with iPhone connections issue
         pAdvertising->setMinPreferred(0x12);
         pServer->getAdvertising()->start();
         BLEDevice::startAdvertising();
-        Serial.println("Characteristic defined! Now you can read it in your phone!");
     }
 
-    bool isConnected()
+    void addCallback(std::string endpoint, MessageCallbacks *callback)
     {
-        // return true if connected to the user
-        return pServer->getConnectedCount() > 0;
+        message_callbacks[endpoint] = callback;
     }
 
-    void setStateChangeCallbacks(BluetoothStateChangeCallbacks *callbacks){
-        Serial.print("Changing Callbacks");
-        state_change_callbacks = callbacks;
-        recording_state_change_callbacks->callbacks = callbacks;
-        download_state_change_callbacks->callbacks = callbacks;
-        // recording
-    }
-
-    ////////////////// Readings
-
-    void setReading(int reading)
+    void addFile(std::string fileName, int fileLocation)
     {
-        // TODO store and transfer to the bluetooth device
-        current_reading_characteristic->setValue(reading);
-        current_reading_characteristic->notify();
+        file_locations[fileName] = fileLocation;
     }
 
-    ////////////////// Recording Management
-
-    RecordingStateRequest getRecordingStateRequest()
+    void sendMessage(std::string endpoint, std::string message)
     {
-        return RSRStartRequested;
-        // check if the user has set start recording
-
-        // use the recordingState
-        // return true if this is currently in a start recording state
-    }
-
-    // set whether or not currently recording
-    void setRecordingState(RecordingState state)
-    {
-        int val = static_cast<int>(state);
-        // store the recording state and transfer it in bluetooth
-        recording_state_characteristic->setValue(val);
-        recording_state_characteristic->notify();
-    }
-    ////////////////// Recording Download Management
-
-    DownloadStateRequest getDownloadStateRequest()
-    {
-        return DSRNotRequested;
-    }
-
-    void uploadData()
-    {
-        Serial.println("Clearing Data");
-        // clear the current download
-        dataManager->clearDownload();
-        Serial.println("Setting Download State Data");
-        // set the download state to the correct value
-        // calculate and set the hash
-        // int hash = dataManager->getRecordingHash();
-        // recording_hash_characteristic->setValue(hash);
-        // recording_hash_characteristic->notify();
-        Serial.println("Hash set");
-        _setDownloadProgressState(DSInProgress);
+        client_current_endpoint_char->setValue(endpoint);
+        client_current_endpoint_char->notify();
+        client_message_char->setValue(message);
+        client_message_char->notify();
     }
 
     void run()
     {
-        if (currentDownloadState == DSInProgress)
+        if (upload_state.uploading)
         {
-            Serial.println("Download In Progress");
-            // if complete set the download state to complete
-            Serial.println(dataManager->downloadComplete());
-            if (dataManager->downloadComplete())
+            if (upload_state.file_index >= upload_state.file_length)
             {
-                Serial.println("Download Complete");
-                _setDownloadProgressState(DSComplete);
+                Serial.println("Finished");
+                // TODO done
+                upload_state.uploading = false;
+                upload_state.file_index = 0;
+                upload_state.file_length = 0;
+                client_receiving_char->setValue("false");
+                client_receiving_char->notify();
             }
             else
             {
-                // Read the next packet
-                char *packet = dataManager->readNextDownloadPacket();
-                // Send the packet to the frontend
-                uint8_t *data = reinterpret_cast<uint8_t *>(packet);
-                size_t length = downloadPacketSize;
+                Serial.println("Sending Packet");
+                Serial.println(upload_state.file_index);
+                const int index = upload_state.file_index;
+                int i = index;
+                const int packetLength = PACKET_SIZE > upload_state.file_length - index ?
+                    upload_state.file_length - index : PACKET_SIZE;
+                Serial.println(packetLength);
+                for (; i < packetLength; i++)
+                {
+                    packet[i] = EEPROM.readByte(index + i);
+                }
+                upload_state.file_index = i + index;
+                // Now can write the packet on the rx line
+                char *packet_address = &(packet[0]);
+                uint8_t *data = reinterpret_cast<uint8_t *>(packet_address);
+                size_t length = packetLength;
+                Serial.println("packet length");
                 Serial.println(length);
-                recording_hash_characteristic->setValue(data, length);
-                recording_hash_characteristic->notify();
+                client_rx_char->setValue(data, length);
+                client_rx_char->notify();
                 Serial.println("sent data");
             }
         }
     }
 };
 
-void DownloadStateRequestCallbacks::onWrite(BLECharacteristic *pCharacteristic)
+void DevBluetoothController::ServerMessageCallbacks::onWrite(BLECharacteristic *pCharacteristic)
 {
-
-    std::string value = pCharacteristic->getValue();
-    Serial.println("Received Download Request");
-    Serial.println(value.c_str());
-    Serial.println(value[0]);
-    Serial.println(value.length());
-    if (value.length() > 0)
-    {
-        int intValue = (int)value.at(0);
-        Serial.println(intValue);
-        // handle the value written by the client
-        DownloadStateRequest enumVal = static_cast<DownloadStateRequest>(intValue);
-        Serial.println(enumVal);
-        callbacks->downloadStateRequestChangeCallback(enumVal);
-    }
+    std::string message = pCharacteristic->getValue();
+    std::string endpoint = controller->server_current_endpoint_char->getValue();
+    // Serial.print("Message: ");
+    // Serial.println(message.c_str());
+    // Serial.print("Endpoint: ");
+    // Serial.println(endpoint.c_str());
+    MessageCallbacks *callback = controller->message_callbacks[endpoint];
+    callback->callback(message);
 }
+
+void DevBluetoothController::ServerFileNameCallbacks::onWrite(BLECharacteristic *pCharacteristic)
+{
+    std::string filename = pCharacteristic->getValue();
+    Serial.print("filename: ");
+    Serial.println(filename.c_str());
+    const int file_location = controller->file_locations[filename];
+    const int file_length = EEPROM.readInt(file_location);
+    const int file_start_address = file_location + 4;
+    controller->upload_state.file_length = file_length;
+    controller->upload_state.uploading = true;
+    controller->upload_state.file_state_address = file_start_address;
+    controller->upload_state.file_index = 0;
+    controller->client_receiving_char->setValue("true");
+    controller->client_receiving_char->notify();
+    delay(20);
+}
+
+// Send a file and receive a file
+
+#endif

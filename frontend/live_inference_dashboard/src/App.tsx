@@ -18,10 +18,28 @@
 // import authManager from './models/managers/authManager';
 // import MainPage from './pages/mainPage';
 
+import { Button } from "reactstrap";
+import InferencePage from "./pages/inferencePage";
+import { BluetoothController } from "./utils/BlutoothController3";
+import 'bootstrap/dist/css/bootstrap.css';
+import { useRecoilValue } from "recoil";
+import { authAtom } from "./models/atoms/apiAtoms";
+import { LoginPage } from "./pages/loginPage";
+import modelsManager from "./models/managers/modelsManager";
+
+const bluetoothController = new BluetoothController(
+  (device)=> {}, () => {}
+);
+
+bluetoothController.add_callback("/test_response", async (message) => {
+  console.log("message received");
+  console.log(message);
+})
 
 function App () {
-  return <>
-  </>
+  const authValue = useRecoilValue(authAtom);
+
+  return authValue.loggedIn? <InferencePage></InferencePage> : <LoginPage></LoginPage>;
 }
 
 export default App;

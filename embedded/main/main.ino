@@ -1,160 +1,64 @@
-// #include <EEPROM.h>
+#include "streamController.h"
+#include "ADS131M08.h"
+#include "ADS131ESP.h"
 
-// #include "devBluetoothController2.h"
-// #include "dataManager.h"
+StreamController *streamController;
+ADS131M08 adc;
 
-// DataManager *dataManager = new DataManager();
-// DevBluetoothController *devBluetoothController = new DevBluetoothController(dataManager);
-
-// bool isRecording = false;
-
-// class StateChangeCallbacks : public BluetoothStateChangeCallbacks
-// {
-//   void recordingStateRequestChangeCallback(RecordingStateRequest &state) override
-//   {
-//     // callback to run when the client requests a recording state change
-//     Serial.println("Recording Request Change");
-//     Serial.println(state);
-
-//     if (state == RSRStartRequested)
-//     {
-//       // tell the client the recording has started
-//       devBluetoothController->setRecordingState(RSInProgress);
-//       isRecording = true;
-//     }
-//     if (state == RSRStopRequested)
-//     {
-//       // tell the client the recording has stopped
-//       devBluetoothController->setRecordingState(RSComplete);
-//       isRecording = false;
-//       // compute the feature extraction on the recorded data
-//       dataManager->doFeatureExtraction();
-//     }
-//   }
-
-//   void downloadStateRequestChangeCallback(DownloadStateRequest &state) override
-//   {
-//     Serial.println("Download Request Change");
-//     Serial.println(state);
-//     // tell the bluetooth controller the data from the dataManager
-//     devBluetoothController->uploadData();
-//   }
-// };
-
-// StateChangeCallbacks *callbacks = new StateChangeCallbacks();
-
-// void setup()
-// {
-//   Serial.begin(115200);
-//   Serial.println("Starting BLE work!");
-
-//   // setup the bluetooth controller
-//   devBluetoothController->setup();
-//   devBluetoothController->setStateChangeCallbacks(callbacks);
-// }
-
-// class TestCallback : public TextToTextRouteCallback {
-//     public:
-//     std::string callback(std::string message) override {
-//       return "hello";
-//     }
-// };
-
-// void loop()
-// {
-
-//   DevBluetoothController *controller = new DevBluetoothController();
-
-//   controller->setup();
-//   controller->add_route("/hi",  new TestCallback());
-
-//   static long recording_start_time = 0;
-//   static int count = 0;
-//   static int lastReadingMillis;
-//   static const int liveReadingTransmitTimePeriod_ms = 100; // transmit 10 times per second (every 100ms)
-
-//   // example of keeping the recording alive for 10 second
-//   if (!isRecording)
-//   {
-//     recording_start_time = millis();
-//   }
-//   else
-//   {
-//     if (millis() - recording_start_time > 1000)
-//     {
-//       Serial.println('Stopping Recording');
-//       devBluetoothController->setRecordingState(RSComplete);
-//       isRecording = false;
-//     }
-//   }
-
-//   // Run the bluetooth controller
-//   devBluetoothController->run();
-
-//   if (isRecording)
-//   {
-//     // TODO @teo create an instance of the reading packet struct and send it to the server
-//     // ReadingPacket packet = {};
-//     // dataManager->addPacket(packet)
-//   }
-
-//   if (millis() > lastReadingMillis + liveReadingTransmitTimePeriod_ms)
-//   {
-//     count += 1;
-//     lastReadingMillis += liveReadingTransmitTimePeriod_ms;
-//     // TODO @teo put a single channel value in here as an int, (I will convert to support full channels)
-//     int readingValue = count;
-//     devBluetoothController->setReading(readingValue);
-//   }
-// }
-
-#include <EEPROM.h>
-#include "devBluetoothController3.h"
-
-#define EEPROM_SIZE 1000
-
-class TestCallbacks : public MessageCallbacks
-{
-  DevBluetoothController *controller;
-
-public:
-  TestCallbacks(DevBluetoothController *controller)
-  {
-    this->controller = controller;
-  }
-
-  void callback(std::string message) override
-  {
-    Serial.println(message.c_str());
-    delay(100);
-    Serial.println("Running Callback");
-    controller->sendMessage("/test_response","response message");
-  }
-};
-DevBluetoothController *controller;
 void setup()
 {
   Serial.begin(115200);
-  // initiliase the EEPROM
-  EEPROM.begin(EEPROM_SIZE);
-
-  // create a fake file
-  const int testFileLocation = 100;
-  const int testFileLength = 1000;
-  EEPROM.writeInt(testFileLocation, testFileLength);
-  for (int i = 0; i < 1000; i++){
-    EEPROM.writeByte(i + testFileLocation + 4, (char)i);
+  streamController = new StreamController();
+  streamController->connect("Pixel", "asdfghjkl");
+  adc.begin();
+  adc.RESET();
+  adc.STANDBY();
+  for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
+  {
+    adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001110); // Clock register (page 55 in datasheet)
+    // /*CLOCK REG SETTINGS
+    //  * Bits 15-8: ADC Channel enable/disable
+    //  * Bit 7: Crystal disable
+    //  * Bit 6: External Reference Enable
+    //  * Bit 5: Reserved
+    //  * Bits 4-2: Modulator Oversampling 000 = 128 OSR (32ksps), 111 = 16256 OSR (250sps)
+    //  * Bits 1-0: Power mode selections 11 or 10 = high resolution, 01 = low power, 00 = very low power
+    //  */
+    adc.writeReg(adsIndex, ADS131_CFG, 0b0000000000000000);
+    // //DC Block Filter settings:
+    adc.writeReg(adsIndex, ADS131_THRSHLD_LSB, 0b0000000000000100);
+    // //Channel settings
+    adc.writeReg(adsIndex, ADS131_CH0_CFG, 0b0000000000000000);
+    // //Gain settings, 1-128 (increasing by factor of 2)
   }
 
-
-  controller = new DevBluetoothController();
-  controller->addCallback("/test", new TestCallbacks(controller));
-  controller->addFile("test_file", testFileLocation);
-  controller->setup();
-  Serial.println("Setup Complete");
+  adc.setGain(128);
+  adc.WAKEUP();
+  delayMicroseconds(50);
+  adc.startData();
 }
 
+uint8_t maxReading = 0;
 void loop()
 {
-  controller->run();
+  const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
+  static int lastMeasurementTime = micros();
+
+  if (adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
+  {
+    Serial.println("frameReady");
+    lastMeasurementTime = micros();
+    streamController->addReading(adc.framePointer(), adc.frameSize());
+    adc.newFrame();
+  }
+  adc.run();
+
+
+  // uint8_t data[480] = {0};
+
+  // if((micros() - lastMeasurementTime > measurementPeriod_us))
+  // {
+  //   lastMeasurementTime = micros();
+  //   streamController->addReading(&(data[0]), 480);
+  // }
 }

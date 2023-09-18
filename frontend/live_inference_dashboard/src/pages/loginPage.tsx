@@ -81,7 +81,13 @@ export const login_page_styles = StyleSheet.create({
         top: 100,
         position: 'fixed',
         backgroundColor: 'rgb(239, 247, 247)'
-    }
+    },
+
+    background: {
+        backgroundImage: 'linear-gradient(#58566b, #2e3442)',
+        width: '100vw',
+        height: '100vh',
+    },
 });
 
 export const LoginPage = memo(props => {
@@ -116,7 +122,8 @@ export const LoginPage = memo(props => {
 
 
     return <>
-        <Form className={css(login_page_styles.form_styles)} >
+    <div className={css(login_page_styles.background)} style={{display:'flex'}}>
+        <Form className={css(login_page_styles.form_styles)} style={{margin:'auto', paddingBottom: 200}}>
             <FormGroup>
                 <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"></Input>
                 <Input className={css(login_page_styles.form_items)} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="password"
@@ -126,7 +133,7 @@ export const LoginPage = memo(props => {
                         }
                     }}></Input>
                 <Row className={css(login_page_styles.row_style)}>
-                    <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(true)}>Forgot Password</Button>
+                    {/* <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(true)}>Forgot Password</Button> */}
                 </Row>
             </FormGroup>
             <Row className={css(login_page_styles.row_style)}>
@@ -158,5 +165,6 @@ export const LoginPage = memo(props => {
                 </Form>
             }
         </Form>
+        </div>
     </>
 });

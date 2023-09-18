@@ -13,6 +13,8 @@ const CLIENT_SERVICE = "ce2bd191-c2b9-4e02-964c-0a0bd7e421da"
 const CLIENT_MESSAGE = "b44c49de-4751-439c-8ea7-c3bc2516aa3c"
 const CLIENT_CURRENT_ENDPOINT = "7f853ef2-ba92-4c0a-bf53-b7dd876f0153"
 const CLIENT_RECEIVING = "58813e28-4aa6-4e99-abf7-d5f198cfd819"
+// RX Characteristics
+const RX_SERVICE = "d03e19c1-457e-456c-b1d1-48f335302858"
 const CLIENT_RX = "2aa577c5-a852-487c-8e01-1237a093a0be"
 
 
@@ -86,10 +88,11 @@ class Characteristic {
     }
 
     public add_callback(callback: (data: DataView) => Promise<void>) {
-        this._characteristic.addEventListener('characteristicvaluechanged', (event) => {
+        this._characteristic.addEventListener('characteristicvaluechanged', async (event) => {
             // @ts-ignore
             const bytes: DataView = event.target.value; // use little endian
-            callback(bytes);
+            console.log(bytes)
+            await callback(bytes);
         });
         this._characteristic.startNotifications();
     }
@@ -136,11 +139,15 @@ export class BluetoothController {
         client_message: Characteristic,
         client_endpoint: Characteristic,
         client_receiving: Characteristic,
-        client_rx: Characteristic,
+    } | null = null;
+
+    private _rx_chars : {
+        client_rx: Characteristic
     } | null = null;
 
     private _server_service: BluetoothRemoteGATTService | null = null;
     private _client_service: BluetoothRemoteGATTService | null = null;
+    private _rx_service: BluetoothRemoteGATTService | null = null;
 
     private _callbacks: { [endpoint: string]: (message: string) => Promise<void> } = {};
 
@@ -176,7 +183,6 @@ export class BluetoothController {
             client_message: await Characteristic.construct_from_uuid(CLIENT_MESSAGE, this._client_service),
             client_endpoint: await Characteristic.construct_from_uuid(CLIENT_CURRENT_ENDPOINT, this._client_service),
             client_receiving: await Characteristic.construct_from_uuid(CLIENT_RECEIVING, this._client_service),
-            client_rx: await Characteristic.construct_from_uuid(CLIENT_RX, this._client_service),
         };
         this._client_chars.client_message.add_callback(
             async (data) => {
@@ -189,6 +195,7 @@ export class BluetoothController {
         )
         this._client_chars.client_receiving.add_callback(
             async (data) => {
+                console.log("client receiving")
                 const receiving = asciiArrayBufferToString(data.buffer) == "true";
                 if (receiving) {
                     this._download_state.receiving = true;
@@ -198,15 +205,25 @@ export class BluetoothController {
                 }
             }
         )
-        this._client_chars.client_rx.add_callback(
+
+    }
+
+    private async _setup_rx_characteristics() {
+        if (this._rx_service == null) {
+            return;
+        }
+        this._rx_chars = {
+            client_rx : await Characteristic.construct_from_uuid(CLIENT_RX, this._rx_service),
+        }
+        this._rx_chars.client_rx.add_callback(
             async (data) => {
-                console.log('Recievinf data');
+                console.log('Receiving rx data');
                 console.log(data);
                 this._download_state.buffer.push(data);
             }
         )
-
     }
+
 
 
     private async _setupDevice() {
@@ -232,9 +249,11 @@ export class BluetoothController {
         // const services = await server.getPrimaryServices();
         this._server_service = await server.getPrimaryService(SERVER_SERVICE);
         this._client_service = await server.getPrimaryService(CLIENT_SERVICE);
+        this._rx_service = await server.getPrimaryService(RX_SERVICE);
 
         await this._setup_server_characteristics();
         await this._setup_client_characteristics();
+        await this._setup_rx_characteristics();
 
         this._on_connect(this.device);
     }
@@ -252,6 +271,7 @@ export class BluetoothController {
             optionalServices: [
                 SERVER_SERVICE,
                 CLIENT_SERVICE,
+                RX_SERVICE,
             ]
         });
         console.log('Paired to device')

@@ -1,61 +1,89 @@
-import asyncio
-import base64
+# # import asyncio
+# # import websockets
 
-from redis.asyncio import from_url
+# # async def hello():
+# #     uri = "ws://165.22.123.190:8005/sample"
+# #     async with websockets.connect(uri) as websocket:
+# #         while True:
+# #             await websocket.send("Hi")
 
+# # asyncio.get_event_loop().run_until_complete(hello())
+# import pickle
 
-MAX_BUFFER_LENGTH = 200000
-PACKETS_SIZE = 48
-REDIS_URL = 'redis://127.0.0.1'
+# import numpy as np
+# import matplotlib.pyplot as plt
 
-redis = from_url('redis://127.0.0.1', decode_responses=True)
+# # with open('X_test.pkl', 'rb') as f:
+# #     x = pickle.load(f)
 
+# # print(x[0].shape)
 
+# with open('data.txt','r') as file:
+#     data = file.read().split('\n')[:-2]
+#     data = [int(x) for x in data]
+#     print(len(data))
+#     result = [[]for i in range(8)]
+#     for i, x in enumerate(data):
+#         if i == 8 * 5000:
+#             break
+#         result[i % 8].append(x)
+#     data = np.transpose(np.array(result))
+#     print(data.shape)
 
-async def udp_server():
-    # Create a UDP socket and bind it to a specific address and port
-    transport, protocol = await asyncio.get_event_loop().create_datagram_endpoint(
-        UdpServerProtocol,  # Protocol factory function
-        local_addr=('0.0.0.0', 8888)  # Replace with your desired address and port
-    )
+# # Create a random 500x8 NumPy array for demonstration
+# # data = x[5]
 
-    try:
-        await asyncio.sleep(float('inf'))  # Keep the server running indefinitely
-    except KeyboardInterrupt:
-        pass
-    finally:
-        transport.close()
+# # Create a figure and a grid of subplots
+# fig, axes = plt.subplots(nrows=8, ncols=1, figsize=(8, 16), sharex=True)
 
-class UdpServerProtocol(asyncio.DatagramProtocol):
-    def __init__(self):
-        pass
+# # Iterate through each column and plot it on a separate subplot
+# for i in range(8):
+#     axes[i].plot(data[:, i])
+#     axes[i].set_ylabel(f'Axis {i+1}')
 
-    def connection_made(self, transport):
-        print('connection')
-        self.transport = transport
+# # Add labels and a title to the overall figure
+# fig.suptitle('Plotting 8 Axes')
+# axes[-1].set_xlabel('Sample Index')
 
-    def datagram_received(self, data, addr):
-        message = data
-        assert data[0] == 0xAA
-        session_id = int.from_bytes(data[1:5], byteorder='big', signed=False)
-        raw_packets = data[5:]
-        assert len(raw_packets) % PACKETS_SIZE == 0
-        packets = []
-        for i in range(0, len(raw_packets), PACKETS_SIZE):
-            packet = raw_packets[i:i+PACKETS_SIZE]
-            packet = base64.b64encode(packet).decode('utf8')
-            packets.append(packet)
-        asyncio.ensure_future(redis.rpush(str(session_id), *packets))
-        async def check_data_length():
-            current_length = await redis.llen(str(session_id))
-            if current_length > MAX_BUFFER_LENGTH:
-                await redis.ltrim(str(session_id), int(MAX_BUFFER_LENGTH / 10) , current_length)
-        asyncio.ensure_future(check_data_length())
+# # Adjust the layout to prevent overlapping labels
+# plt.tight_layout()
+# plt.show()
 
 
-        print(f"Received data from {addr}: {len(message)}, {session_id}")
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(udp_server())
-    loop.close()
+# import pickle
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+
+
+# with open('data.pkl', 'rb') as file:
+#     loaded_array = pickle.load(file)
+
+
+# data = np.transpose(loaded_array)
+
+# fig, ax = plt.subplots(figsize=(10, 6))
+
+# # Plot each stream on the same set of axes
+# for i in range(8):
+#     ax.plot(data[i], label=f'Stream {i + 1}')
+
+# # Add legend to distinguish between streams
+# ax.legend()
+
+# # Add labels if needed
+# plt.xlabel('Time')
+# plt.ylabel('Value')
+
+# # Show the plot
+# plt.show()
+
+# print(loaded_array.shape)
+
+
+import socket
+
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock.sendto(bytes('test message', "utf-8"), ("165.22.123.190", 8888))

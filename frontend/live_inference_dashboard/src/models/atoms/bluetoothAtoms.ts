@@ -5,32 +5,27 @@ import {DownloadState, RecordingState} from "../../utils/BluetoothManager"
 Atoms relating to bluetooth state
 */
 
-
-export const readingsAtom = atom<number[]>({
-    key : 'readingsAtom',
-    default : [0]
-})
-
-export const connectedDeviceAtom = atom<{
+export const bluetoothStateAtom = atom<{
     device_name: string,
     connected: boolean
 } | null>({
-    key: 'connectedDeviceAtom', // unique ID (with respect to other atoms/selectors)
+    key: 'bluetoothStateAtom', // unique ID (with respect to other atoms/selectors)
     default: {
-        device_name : 'None',
-        connected : false
+        device_name : 'MindFeed Device',
+        connected : true
     }
 },
 );
 
-export const recordingStateAtom = atom<RecordingState>({
-    key: 'recordingStateAtom', // unique ID (with respect to other atoms/selectors)
-    default: RecordingState.RSNotRecording
-},
-);
-
-export const downloadStateAtom = atom<DownloadState>({
-    key: 'downloadStateAtom', // unique ID (with respect to other atoms/selectors)
-    default: DownloadState.DSStopped
-},
-);
+export const deviceStateAtom = atom<{
+    wifi_connected : boolean,
+    streaming : boolean | null,
+    stream_id : string | null,
+}| null>({
+    key: 'deviceStateAtom',
+    default : {
+        wifi_connected : true,
+        streaming: true,
+        stream_id: "12",
+    },
+});

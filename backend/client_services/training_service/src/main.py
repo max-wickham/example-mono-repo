@@ -1,22 +1,15 @@
 '''Task to complete a request to fine train a model'''
 import pickle
-import random
-import string
-import sys
+import sys; sys.path.insert(0,'/')
 import uuid
-sys.path.insert(0,'/')
-
 import asyncio
-import io
 import json
 
-# import keras
 import boto3
-from celery import Celery, shared_task
+from celery import Celery
 from beanie import init_beanie
 from beanie.odm.fields import PydanticObjectId
 import motor
-from asgiref.sync import async_to_sync
 import numpy as np
 import tensorflow as tf
 
@@ -26,7 +19,7 @@ from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 from schemas.mongo_models.account_models import MongoAccount, TrainingState, UserFineTunedModel
 from configs.commons import Tasks
 
-from src.configs.configs import environmentSettings
+from src.configs import environmentSettings
 
 EPOCH_NUMS = 200
 
@@ -84,21 +77,25 @@ async def configure_beanie():
 async def model_training(request: TrainModelRequest):
     '''Async Task'''
     await configure_beanie()
-    print(request)
     account = await MongoAccount.get(PydanticObjectId(request.account_id))
-    print(asyncio.get_event_loop())
-    # training_model = await MoTrainModelRequestngoTrainingModel.get(PydanticObjectId(request.training_model_id))
-    # set status to in progress
+    if account is None:
+        raise Exception
     if request.training_model_id not in account.models:
         account.models[request.training_model_id] = UserFineTunedModel(
+            name = 'na',
             pre_made_model_id=PydanticObjectId(request.training_model_id),
         )
+
     account.models[request.training_model_id].training_state = TrainingState.IN_PROGRESS
     account.models[request.training_model_id].model_location=str(uuid.uuid4())
     await account.save()
     account = await MongoAccount.get(PydanticObjectId(request.account_id))
+    if account is None:
+        raise Exception
 
     pre_trainined_model = await MongoPreMadeModel.get(PydanticObjectId(request.training_model_id))
+    if pre_trainined_model is None:
+        raise Exception
     # load the training data
     training_data = await load_data(account, pre_trainined_model)
     x_data, y_data = label_data(training_data)
@@ -116,8 +113,8 @@ def model_training_task(request: str):
     '''Train a new model'''
     print(request)
     asyncio.set_event_loop(asyncio.new_event_loop())
-    request = TrainModelRequest(**json.loads(request))
-    asyncio.run(model_training(request))
+    request_obj = TrainModelRequest(**json.loads(request))
+    asyncio.run(model_training(request_obj))
 
 ############# Processing Functions
 
@@ -126,7 +123,7 @@ async def load_data(mongo_account : MongoAccount, pre_trainined_model : MongoPre
     Load the training data from S3 storage and construct a numpy array using it
     The data needs to be converted from binary form to the correct format
     '''
-    data : dict[PydanticObjectId,bytes] = {}
+    data : dict[str,list] = {}
 
 
     for gesture_id in pre_trainined_model.gestures:

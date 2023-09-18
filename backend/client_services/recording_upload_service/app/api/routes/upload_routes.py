@@ -5,7 +5,8 @@ import uuid
 from fastapi import File, UploadFile, Depends
 from beanie import PydanticObjectId
 from app.api.tasks.process_recording_task import process_recording_upload_task
-from schemas.mongo_models.gesture import MongoAccountGestureRecordings, MongoGestureInformation
+from schemas.mongo_models.gesture import MongoGestureInformation
+from schemas.mongo_models.account_models import MongoAccountGestureRecordings
 
 from schemas.mongo_models.account_models import MongoAccount
 from libs.authentication.user_token_auth import TokenData, token_authentication
@@ -19,14 +20,14 @@ async def post_recording(
     gesture_id : str,
     recording: UploadFile = File(...), token_data: TokenData = Depends(token_authentication)):
     '''Upload a binary recording file of the sensor data'''
+
     mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))
-    if mongo_account is None:
+    if mongo_account is None or mongo_account.id is None:
         raise AccountNotFoundException(token_data.account_id)
 
-    gesture = await MongoGestureInformation.get(PydanticObjectId(gesture_id))
-    if gesture is None:
+    gesture : MongoGestureInformation | None = await MongoGestureInformation.get(PydanticObjectId(gesture_id))
+    if gesture is None or gesture.id is None:
         raise Exception
-    # TODO add exception if gesture not found
 
     filename = str(uuid.uuid4())
     contents = await recording.read()

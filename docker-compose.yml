@@ -208,7 +208,6 @@ services:
       dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
     volumes:
       - ./backend/dev_services/create_fake_data/main.py:/main.py
-      - ./backend/dev_services/create_fake_data/X_test.pkl:/X_test.pkl
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
       - ./model_saving:/model_saving

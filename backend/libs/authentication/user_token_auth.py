@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 from fastapi.params import Depends
-from app.api.configs.configs import environmentSettings
+from app.api.configs import environmentSettings
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import BaseModel

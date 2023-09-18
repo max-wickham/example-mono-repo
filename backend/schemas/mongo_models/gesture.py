@@ -12,9 +12,6 @@ class MongoGestureInformation(Document):
     comments : str
     video_link : str
     photo_link: str
-
-class MongoAccountGestureRecordings(BaseModel):
-    '''Information about a gesture for a user'''
-    gesture_id: PydanticObjectId
-    user_recordings : list[str] = []
-    processed_user_recordings : list[str] = []
+    continuous : bool = False
+    sampling_frequency_hz : int = 1000
+    num_samples_per_recording : int = 500

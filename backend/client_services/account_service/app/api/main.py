@@ -8,7 +8,8 @@ from beanie import init_beanie
 
 
 from schemas.mongo_models.account_models import MongoAccount
-from app.api.configs.configs import Config, environmentSettings
+
+from app.api.configs import Config, environmentSettings
 
 
 app = FastAPI(

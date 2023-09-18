@@ -9,8 +9,8 @@ from beanie import init_beanie
 import boto3
 
 from schemas.mongo_models.account_models import MongoAccount
-from schemas.mongo_models.gesture import MongoGestureInformation, MongoAccountGestureRecordings
-from app.api.configs.configs import Config, environmentSettings
+from schemas.mongo_models.gesture import MongoGestureInformation
+from app.api.configs import Config, environmentSettings
 
 
 app = FastAPI(

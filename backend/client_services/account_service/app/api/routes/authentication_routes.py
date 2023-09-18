@@ -10,7 +10,7 @@ from schemas.mongo_models.account_models import MongoAccount
 from libs.authentication.user_token_auth import Token, TokenData, token_authentication
 
 from app.api.authentication.authentication import authenticate_user, create_access_token
-from app.api.configs.configs import environmentSettings
+from app.api.configs import environmentSettings
 from app.api.main import app
 
 @app.post('/token', response_model=Token, tags=["Token"])

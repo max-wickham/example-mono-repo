@@ -10,11 +10,10 @@ from celery import Celery
 
 from schemas.mongo_models.account_models import MongoAccount
 from schemas.mongo_models.gesture import MongoGestureInformation
-from schemas.mongo_models.training_models import MongoTrainingModel
 from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 from configs.commons import Tasks
 
-from app.api.configs.configs import Config, environmentSettings
+from app.api.configs import Config, environmentSettings
 
 
 app = FastAPI(
@@ -88,7 +87,7 @@ async def app_init():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoAccount, MongoGestureInformation, MongoTrainingModel, MongoPreMadeModel])
+        document_models=[MongoAccount, MongoGestureInformation, MongoPreMadeModel])
 
 
 # import routes

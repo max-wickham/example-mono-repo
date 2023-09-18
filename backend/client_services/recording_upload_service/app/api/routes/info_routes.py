@@ -19,9 +19,10 @@ class Gestures(BaseModel):
     class Gesture(BaseModel):
         '''Information regarding a single gesture'''
         name : str
-        num_recordings: str
-        recording_completion_percentage: str
+        num_recordings: int
+        recording_completion_percentage: int
         gesture_id : GestureID
+        sample_frequency_hz : int
 
     # dict of gesture id to gesture info
     gestures : dict[GestureID,Gesture]
@@ -40,7 +41,6 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
     response_gestures = Gestures(
         gestures = {}
     )
-    print(mongo_account.gestures)
     async for gesture in mongo_gestures:
         response_gestures.gestures[str(gesture.id)] = Gestures.Gesture(
             name=gesture.name,
@@ -51,8 +51,7 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
                 if str(gesture.id) not in mongo_account.gestures.keys() else
                 len(mongo_account.gestures[str(gesture.id)].user_recordings))
                 / MAX_RECORDINGS * 100),
-            gesture_id=str(gesture.id)
+            gesture_id=str(gesture.id),
+            sample_frequency_hz = gesture.sampling_frequency_hz
         )
-
-
     return response_gestures

@@ -13,8 +13,8 @@ import motor
 import boto3
 from redis.asyncio import from_url
 
-from schemas.mongo_models.account_models import MongoAccount, MongoAccountGestureRecordings, UserFineTunedModel, TrainingState
-from schemas.mongo_models.gesture import MongoGestureInformation, MongoAccountGestureRecordings
+from schemas.mongo_models.account_models import MongoAccount, UserFineTunedModel, TrainingState
+from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -82,6 +82,7 @@ async def main():
 
 
     mongo_account.models[str(pre_made_model.id)] = UserFineTunedModel(
+        name = 'Na',
         training_state = TrainingState.COMPLETE,
         model_location = 'model_saving',
         pre_made_model_id = pre_made_model.id,

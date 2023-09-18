@@ -1,34 +1,36 @@
 '''Routes for saving recordings'''
 import requests
-import struct
-import base64
 import pickle
 
-from fastapi import File, UploadFile, Depends
+from fastapi import Depends
 from beanie import PydanticObjectId
-import numpy as np
 
 from libs.authentication.user_token_auth import TokenData, token_authentication
 
-from app.api.main import app, redis, s3
+from schemas.mongo_models.gesture import MongoGestureInformation
+from app.api.main import app, redis
 from app.api.tools.tools import data_to_numpy
-
-NUM_READINGS = 500
-NUM_CHANNELS = 8
 
 @app.get("/save_recording/{session_id}/{gesture_id}", tags=['RecordingStreaming'])
 async def get_save_recording(session_id : str, gesture_id: str, token_data: TokenData = Depends(token_authentication)):
     '''
     Take the last 0.5 seconds of recording data, download it and send it to the recording upload service
     '''
-
-    data_length = await redis.llen(session_id)
-    if data_length < 2*NUM_READINGS:
+    gesture = await MongoGestureInformation.get(PydanticObjectId(gesture_id))
+    if gesture is None:
         raise Exception
 
-    data = await redis.lrange(str(session_id), -1*NUM_READINGS, -1)
-    # data = np.array([struct.unpack(f'{NUM_CHANNELS}f', base64.b64decode(reading_set.encode('utf8'))) for reading_set in data])
+    data_length = await redis.llen(session_id)
+
+    # TODO check that the current session if has the correct recording rate
+
+    if data_length < 2*gesture.num_samples_per_recording:
+        raise Exception
+
+    data = await redis.lrange(str(session_id), -1*gesture.num_samples_per_recording, -1)
     data = data_to_numpy(data)
+
+    # TODO use tmp
     pickle_file_path = '/data.pickle'
     with open(pickle_file_path, 'wb') as pickle_file:
         pickle.dump(data, pickle_file)

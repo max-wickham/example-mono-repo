@@ -519,9 +519,10 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-  static const unsigned long last_check_time = micros();
+  static unsigned long last_check_time = micros();
 
   if (micros() - last_check_time > 500){
+    last_check_time = micros();
     loop_ads
     {
       loadData(adsIndex);

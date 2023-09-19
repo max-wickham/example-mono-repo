@@ -519,14 +519,22 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-  // Handle any load data requests from each ads
-  loop_ads
-  {
-    // Serial.println(requiresDataLoad[adsIndex]);
-    if (requiresDataLoad[adsIndex] > 0)
+  static const unsigned long last_check_time = micros();
+
+  if (micros() - last_check_time > 500){
+    loop_ads
     {
-      requiresDataLoad[adsIndex] -= 1;
       loadData(adsIndex);
     }
   }
+  // // Handle any load data requests from each ads
+  // loop_ads
+  // {
+  //   // Serial.println(requiresDataLoad[adsIndex]);
+  //   if (requiresDataLoad[adsIndex] > 0)
+  //   {
+  //     requiresDataLoad[adsIndex] -= 1;
+  //     loadData(adsIndex);
+  //   }
+  // }
 }

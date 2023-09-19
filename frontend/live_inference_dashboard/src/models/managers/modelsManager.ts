@@ -12,7 +12,6 @@ export default {
 
     getPreMadeModels : async () => {
         const preMadeModels = await PreMadeModelsService.getPreMadeModelsPreMadeModelsGet();
-        console.log(preMadeModels);
         setRecoil(lastRefreshTimeAtom, new Date().getTime());
         setRecoil(preMadeModelsAtom, preMadeModels);
     },

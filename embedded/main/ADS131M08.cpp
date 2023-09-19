@@ -19,7 +19,7 @@ volatile uint8_t sample_counter = 0;
 // Has received data since the last index_in_frame increment
 volatile bool receivedFrame[NUM_ADS] = {false};
 // Interrupt flag
-volatile bool requiresDataLoad[NUM_ADS] = {false};
+volatile int requiresDataLoad[NUM_ADS] = {0};
 
 const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
 const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
@@ -58,7 +58,7 @@ template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void)
 {
   // Make a request to load data
-  requiresDataLoad[adsCallbackIndex] = true;
+  requiresDataLoad[adsCallbackIndex] += 1;
 }
 
 /*
@@ -516,9 +516,9 @@ void ADS131M08::run()
   loop_ads
   {
     // Serial.println(requiresDataLoad[adsIndex]);
-    if (requiresDataLoad[adsIndex])
+    if (requiresDataLoad[adsIndex] > 0)
     {
-      requiresDataLoad[adsIndex] = false;
+      requiresDataLoad[adsIndex] -= 1;
       loadData(adsIndex);
     }
   }

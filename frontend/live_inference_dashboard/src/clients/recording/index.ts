@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { Body_post_recording_recording__gesture_id__post } from './models/Body_post_recording_recording__gesture_id__post';
+export type { Body_post_rest_recording_rest_recording__model_id__post } from './models/Body_post_rest_recording_rest_recording__model_id__post';
 export type { Gesture } from './models/Gesture';
 export type { Gestures } from './models/Gestures';
 export type { HTTPValidationError } from './models/HTTPValidationError';

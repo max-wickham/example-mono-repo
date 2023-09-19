@@ -83,10 +83,13 @@ void ADS131M08::begin(void)
   loop_ads
   {
     pinMode(resetPins[adsIndex], OUTPUT);
-    digitalWrite(resetPins[adsIndex], HIGH);
     pinMode(selectPins[adsIndex], OUTPUT);
-    digitalWrite(selectPins[adsIndex], HIGH);
     pinMode(drdyPins[adsIndex], INPUT_PULLUP);
+  }
+  loop_ads
+  {
+    digitalWrite(resetPins[adsIndex], HIGH);
+    digitalWrite(selectPins[adsIndex], HIGH);
   }
   pinMode(DEBUG_PIN, OUTPUT);
   digitalWrite(DEBUG_PIN, LOW);
@@ -101,8 +104,10 @@ void ADS131M08::begin(void)
   // dummy transfers to clear data buffer
   loop_ads
   {
+    enADS(adsIndex);
     spiCommFrame(adsIndex, &responseArr[0]);
     spiCommFrame(adsIndex, &responseArr[0]);
+    disADS(adsIndex);
   }
 
   // Attach the ISR
@@ -113,13 +118,15 @@ void ADS131M08::hw_reset() // Hardware Reset
 {
   loop_ads
   {
-    Serial.println("HW Reset");
     digitalWrite(resetPins[adsIndex], LOW);
-    delay(ADS131_RESET_PULSE);
-    digitalWrite(resetPins[adsIndex], HIGH);
-    delay(ADS131_RESET_DELAY);
-    delay(1); // time for registers to settle 1 ms
   }
+  delay(ADS131_RESET_PULSE);
+  loop_ads
+  {
+    digitalWrite(resetPins[adsIndex], HIGH);
+  }
+  delay(ADS131_RESET_DELAY);
+  delay(1); // time for registers to settle 1 ms
 }
 
 void ADS131M08::startData(void) // Begin the filling of the data frame with conversions

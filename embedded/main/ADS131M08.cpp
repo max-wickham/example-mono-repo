@@ -217,7 +217,7 @@ void ADS131M08::STANDBY()
 
 #ifndef ADS131_POLLING
     // Detach the ISR
-    detachInterrupt(drdyPins[adsIndex]);
+    // detachInterrupt(drdyPins[adsIndex]);
 #endif
   }
   return;
@@ -519,23 +519,26 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-  static unsigned long last_check_time = micros();
-
-  if (micros() - last_check_time > 500){
-    last_check_time = micros();
-    loop_ads
-    {
-      loadData(adsIndex);
-    }
+  if (digitalRead(drdyPins[0])){
+    Serial.print('pin high');
   }
-  // // Handle any load data requests from each ads
-  // loop_ads
-  // {
-  //   // Serial.println(requiresDataLoad[adsIndex]);
-  //   if (requiresDataLoad[adsIndex] > 0)
+  // static unsigned long last_check_time = micros();
+
+  // if (micros() - last_check_time > 500){
+  //   last_check_time = micros();
+  //   loop_ads
   //   {
-  //     requiresDataLoad[adsIndex] -= 1;
   //     loadData(adsIndex);
   //   }
   // }
+  // Handle any load data requests from each ads
+  loop_ads
+  {
+    // Serial.println(requiresDataLoad[adsIndex]);
+    if (requiresDataLoad[adsIndex] > 0)
+    {
+      requiresDataLoad[adsIndex] -= 1;
+      loadData(adsIndex);
+    }
+  }
 }

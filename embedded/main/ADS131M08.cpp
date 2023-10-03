@@ -519,19 +519,6 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-  if (digitalRead(drdyPins[0])){
-    Serial.print('pin high');
-  }
-  // static unsigned long last_check_time = micros();
-
-  // if (micros() - last_check_time > 500){
-  //   last_check_time = micros();
-  //   loop_ads
-  //   {
-  //     loadData(adsIndex);
-  //   }
-  // }
-  // Handle any load data requests from each ads
   loop_ads
   {
     // Serial.println(requiresDataLoad[adsIndex]);

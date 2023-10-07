@@ -1,25 +1,28 @@
 '''Task to complete a request to fine train a model'''
-import sys
-sys.path.insert(0,'/')
-
+import pickle
+import sys; sys.path.insert(0,'/')
+import uuid
 import asyncio
-import io
 import json
 
-import keras
 import boto3
-from celery import Celery, shared_task
+from celery import Celery
 from beanie import init_beanie
 from beanie.odm.fields import PydanticObjectId
 import motor
-from asgiref.sync import async_to_sync
+import numpy as np
+import tensorflow as tf
+
 
 from schemas.task_messages.model_training_task import TrainModelRequest
-from schemas.mongo_models.training_models import MongoTrainingModel, TrainingState
-from schemas.mongo_models.account_models import MongoAccount
+from schemas.mongo_models.pre_made_models import MongoPreMadeModel
+from schemas.mongo_models.account_models import MongoAccount, TrainingState, UserFineTunedModel
 from configs.commons import Tasks
 
-from src.configs.configs import environmentSettings
+from src.configs import environmentSettings
+
+EPOCH_NUMS = 200
+
 
 #############  Configure S3
 
@@ -27,6 +30,11 @@ if environmentSettings.ENV == 'DEV':
     import os
     os.environ['S3_USE_SIGV4'] = 'True'
     s3 = boto3.client('s3',
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY
+                      )
+    s3_resource = boto3.resource('s3',
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY
@@ -59,7 +67,7 @@ async def configure_beanie():
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoTrainingModel, MongoAccount])
+        document_models=[MongoPreMadeModel, MongoAccount])
 
 # asyncio.run(asyncio.new_event_loop())
 
@@ -69,21 +77,35 @@ async def configure_beanie():
 async def model_training(request: TrainModelRequest):
     '''Async Task'''
     await configure_beanie()
-    print(request)
-    print(asyncio.get_event_loop())
-    training_model = await MongoTrainingModel.get(PydanticObjectId(request.training_model_id))
-    # set status to in progress
-    training_model.training_state = TrainingState.IN_PROGRESS
-    await training_model.save()
+    account = await MongoAccount.get(PydanticObjectId(request.account_id))
+    if account is None:
+        raise Exception
+    if request.training_model_id not in account.models:
+        account.models[request.training_model_id] = UserFineTunedModel(
+            name = 'na',
+            pre_made_model_id=PydanticObjectId(request.training_model_id),
+        )
+
+    account.models[request.training_model_id].training_state = TrainingState.IN_PROGRESS
+    account.models[request.training_model_id].model_location=str(uuid.uuid4())
+    await account.save()
+    account = await MongoAccount.get(PydanticObjectId(request.account_id))
+    if account is None:
+        raise Exception
+
+    pre_trainined_model = await MongoPreMadeModel.get(PydanticObjectId(request.training_model_id))
+    if pre_trainined_model is None:
+        raise Exception
     # load the training data
-    training_data = await load_data(training_model)
+    training_data = await load_data(account, pre_trainined_model)
+    x_data, y_data = label_data(training_data)
     # create and train the model
-    model = await train_model(training_data, training_model)
+    model = await train_model(x_data,y_data, pre_trainined_model, account)
     # upload the model to the database
-    await upload_model_to_database(model, training_model)
+    await upload_model_to_database(model, account, request.training_model_id)
     # set the status to complete
-    training_model.training_state = TrainingState.COMPLETE
-    await training_model.save()
+    account.models[request.training_model_id].training_state = TrainingState.COMPLETE
+    await account.save()
 
 
 @global_celery.task(name=Tasks.MODEL_TRAINING_TASK)
@@ -91,48 +113,84 @@ def model_training_task(request: str):
     '''Train a new model'''
     print(request)
     asyncio.set_event_loop(asyncio.new_event_loop())
-    request = TrainModelRequest(**json.loads(request))
-    asyncio.run(model_training(request))
+    request_obj = TrainModelRequest(**json.loads(request))
+    asyncio.run(model_training(request_obj))
 
 ############# Processing Functions
 
-async def load_data(training_model: MongoTrainingModel):
+async def load_data(mongo_account : MongoAccount, pre_trainined_model : MongoPreMadeModel):
     '''
     Load the training data from S3 storage and construct a numpy array using it
     The data needs to be converted from binary form to the correct format
     '''
-    data : dict[PydanticObjectId,bytes] = {}
+    data : dict[str,list] = {}
 
-    mongo_account = await MongoAccount.get(training_model.account_id)
 
-    gestures = training_model.gestures
-    print(mongo_account.gestures)
-    print(training_model)
-    for gesture in gestures:
-        recordings = mongo_account.gestures[gesture.gesture_id]
-        data[gesture.gesture_id] = []
-        for recording_filename in recordings.processed_user_recordings:
-            s3_object = s3.get_object(Bucket='processed-recordings', Key=recording_filename)
+    for gesture_id in pre_trainined_model.gestures:
+        recordings = mongo_account.gestures[str(gesture_id)]
+        # print(recordings)
+        data[str(gesture_id)] = []
+        # TODO work out why this is a dict
+        for recording_filename in recordings.user_recordings:
+            s3_object = s3.get_object(Bucket='recordings', Key=recording_filename)
             body = s3_object['Body']
-            data[gesture.gesture_id].append(body.read())
-    print(data)
-    # TODO process the binary data, turn into a numpy array or something
+            numpy_data = pickle.loads(body.read())
+            data[str(gesture_id)].append(np.array(numpy_data))
+
+    return data
+
+def label_data(data : dict):
+    x = []
+    y = []
+    for index, values in enumerate(data.values()):
+        inputs = np.stack(values, axis=0)
+        labels = np.array([index for _ in range(len(inputs))])
+        y.append(labels)
+        x.append(inputs)
+
+    x,y =   np.concatenate(x, axis=0), np.concatenate(y, axis=0)
+    print(x.shape, y.shape)
+    return x,y
 
 
-async def train_model(training_data, mongo_training_model: MongoTrainingModel) -> keras.Model:
+
+async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, account : MongoAccount) -> tf.keras.Model:
     '''
     Train the model using the training data
     The model output dimensions need to be dictated by the number of gestures
     '''
     # TODO create and train the model
+    s3_folder = pre_trainined_model.model_weights
+    bucket = s3_resource.Bucket('models')
+    local_dir = f'/tmp/{account.models[str(pre_trainined_model.id)].model_location}'
+    for obj in bucket.objects.filter(Prefix=s3_folder):
+        target = obj.key if local_dir is None \
+            else os.path.join(local_dir, os.path.relpath(obj.key, s3_folder))
+        if not os.path.exists(os.path.dirname(target)):
+            os.makedirs(os.path.dirname(target))
+        if obj.key[-1] == '/':
+            continue
+        bucket.download_file(obj.key, target)
+
+    model = load_model(local_dir)
+    history = model.fit(x_data, y_data, epochs=EPOCH_NUMS, batch_size=5, shuffle=True)
+    return model
+    # Load the model from the database
+    # Fine tune the model on the x and y data
 
 
 
-async def upload_model_to_database(model: keras.Model, mongo_training_model: MongoTrainingModel):
+async def upload_model_to_database(model: tf.keras.Model,account: MongoAccount,  model_id):
     '''Upload the trained model file to the database'''
-    model.save('/src/models/model')
-    with open('/src/models/model', 'wb') as model_file:
-        model_bytes = model_file.read()
-        filename = mongo_training_model.model_file_name
-        file_obj = io.BytesIO(model_bytes)
-        s3.upload_fileobj(file_obj, 'models', filename)
+    local_folder = f'/tmp/{account.models[model_id].model_location}'
+    model.save(local_folder)
+    for root, dirs, files in os.walk(local_folder):
+        for file in files:
+            local_path = os.path.join(root, file)
+            s3_path = os.path.join(account.models[model_id].model_location, os.path.relpath(local_path, local_folder))
+            s3.upload_file(local_path, 'models', s3_path)
+
+def load_model(model_file_path : str):
+    model = tf.keras.models.load_model(model_file_path)
+    print(model.summary())
+    return model

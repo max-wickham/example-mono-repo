@@ -9,8 +9,9 @@ from beanie import init_beanie
 import boto3
 
 from schemas.mongo_models.account_models import MongoAccount
-from schemas.mongo_models.gesture import MongoGestureInformation, MongoAccountGestureRecordings
-from app.api.configs.configs import Config, environmentSettings
+from schemas.mongo_models.gesture import MongoGestureInformation
+from schemas.mongo_models.pre_made_models import MongoPreMadeModel
+from app.api.configs import Config, environmentSettings
 
 
 app = FastAPI(
@@ -67,7 +68,7 @@ def docs():
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html(req):
     root_path = req.scope.get("root_path", "").rstrip("/")
-    openapi_url = root_path + app.openapi_url
+    openapi_url = root_path + app.openapi_url  # type: ignore
     return get_swagger_ui_html(
         openapi_url=openapi_url,
         title="API",
@@ -77,12 +78,12 @@ async def custom_swagger_ui_html(req):
 @app.on_event("startup")
 async def app_init():
     '''App start up code'''
-    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)
+    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)  # type: ignore
     await init_beanie(
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
-        document_models=[MongoGestureInformation, MongoAccount])
+        document_models=[MongoGestureInformation, MongoAccount,MongoPreMadeModel])  # type: ignore
 
 
 # import routes

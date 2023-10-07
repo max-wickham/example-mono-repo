@@ -8,7 +8,8 @@ from beanie import init_beanie
 
 
 from schemas.mongo_models.account_models import MongoAccount
-from app.api.configs.configs import Config, environmentSettings
+
+from app.api.configs import Config, environmentSettings
 
 
 app = FastAPI(
@@ -49,21 +50,21 @@ async def custom_swagger_ui_html(req):
 async def app_init():
     '''App start up code'''
     client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)
-    if environmentSettings.ENV == 'DEV':
-        await client.drop_database('test')
+    # if environmentSettings.ENV == 'DEV':
+    #     await client.drop_database('test')
     await init_beanie(
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
         document_models=[MongoAccount])
-    if environmentSettings.ENV == 'DEV':
-        from app.api.authentication.authentication import get_password_hash
-        mongo_account = MongoAccount(
-            name = 'test',
-            email='test',
-            password_hash=get_password_hash('test')
-        )
-        await mongo_account.save()
+    # if environmentSettings.ENV == 'DEV':
+    #     from app.api.authentication.authentication import get_password_hash
+    #     mongo_account = MongoAccount(
+    #         name = 'test',
+    #         email='test',
+    #         password_hash=get_password_hash('test')
+    #     )
+    #     await mongo_account.save()
 
 
 # import routes

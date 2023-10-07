@@ -4,13 +4,13 @@
 # create the webserver
 
 
-if [ $ENV == "DEV" ]
-then
-    gunicorn --reload --worker-tmp-dir /dev/shm --config gunicorn.config.py app.api.main:app
+# if [ $ENV == "DEV" ]
+# then
+#     gunicorn --reload --worker-tmp-dir /dev/shm --config gunicorn.config.py app.api.main:app
 
-else
-    gunicorn --worker-tmp-dir /dev/shm --config gunicorn.config.py app.api.main:app
+# else
+#     gunicorn --worker-tmp-dir /dev/shm --config gunicorn.config.py app.api.main:app
 
-fi
+# fi
 
-# python app/api/main.py
+python app/api/main.py

@@ -15,3 +15,4 @@ class MongoGestureInformation(Document):
     continuous : bool = False
     sampling_frequency_hz : int = 1000
     num_samples_per_recording : int = 500
+    num_recordings_required : int = 10

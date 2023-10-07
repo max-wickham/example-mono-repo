@@ -45,8 +45,8 @@ async def main():
     client.drop_database('test')
     await init_beanie(
         database=client['test'], document_models=[
-            MongoAccount,
             MongoGestureInformation,
+            MongoAccount,
             MongoPreMadeModel
         ])
 
@@ -66,16 +66,18 @@ async def main():
             name=name,
             comments='comments',
             video_link='na',
-            photo_link='na'
+            photo_link='na',
+            continuous=True
         )
 
         await mongo_gesture.save()
         gestures.append(mongo_gesture)
 
     pre_made_model = MongoPreMadeModel(
-        name = 'test_model',
+        name = 'Mouse Model',
         gestures = [gesture.id for gesture in gestures],
-        model_weights = 'model_saving'
+        model_weights = 'model_saving',
+        sample_period_s=0.5
     )
 
     await pre_made_model.save()
@@ -192,22 +194,22 @@ async def main():
     # data = read_from_pickle('/X_test.pkl')
     # print(data.shape)
     # NUM_FEATURES = 8
-    # await redis.delete(12)
+    # await redis.delete(str(12))
     # while True:
-    #     float_array = [float(i) for i in range(NUM_FEATURES)]
+    #     int_array = [int(i) for i in range(NUM_FEATURES)]
     #     byte_array = bytearray()
     #     # Iterate through the float values and pack them as float32 (4 bytes each)
-    #     for value in float_array:
-    #         packed_value = struct.pack('f', value)
+    #     for value in int_array:
+    #         packed_value = value.to_bytes(3, byteorder='big', signed=True)
     #         byte_array.extend(packed_value)
 
     #     base64_encoded = base64.b64encode(byte_array)
     #     base64_encoded_str = base64_encoded.decode('utf-8')
-    #     await redis.lpush(12, base64_encoded_str)
+    #     await redis.lpush(str(12), base64_encoded_str)
     #     time.sleep(0.00005)
-    #     length = await redis.llen(12)
+    #     length = await redis.llen(str(12))
     #     if length > 100000:
-    #         await redis.ltrim(12, int(length / 2), length)
+    #         await redis.ltrim(str(12), int(length / 2), length)
 
 
 

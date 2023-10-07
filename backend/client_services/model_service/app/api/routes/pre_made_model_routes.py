@@ -16,7 +16,6 @@ from app.api.exceptions.not_found_exception import AccountNotFoundException
 
 
 GestureID = str
-MIN_RECORDINGS = 10
 
 
 class PreMadeModelInfo(BaseModel):
@@ -30,11 +29,14 @@ class PreMadeModelInfo(BaseModel):
         gesture_id: GestureID
         num_recordings: int
         recording_complete_percentage: int
+        continuous : bool
 
     name: str
     model_id : str
     training_state : TrainingState
     gestures: list[GestureInfo]
+    sample_period_s: float
+    num_rest_recordings: int
 
 class PreMadeModels(BaseModel):
     models : list[PreMadeModelInfo]
@@ -47,17 +49,25 @@ async def mongo_model_to_model_info(mongo_model: MongoPreMadeModel, account_mode
         name=mongo_model.name,
         model_id=str(mongo_model.id),
         training_state= account_model.models[str(mongo_model.id)].training_state if str(mongo_model.id) in account_model.models else TrainingState.NOT_STARTED,
+        sample_period_s=mongo_model.sample_period_s,
         gestures=[
             PreMadeModelInfo.GestureInfo(
                 name=mongo_gesture.name,
                 video_link=mongo_gesture.video_link,
                 photo_link=mongo_gesture.photo_link,
+                continuous=mongo_gesture.continuous,
                 gesture_id=str(mongo_gesture.id),
                 num_recordings=len(account_model.gestures[str(mongo_gesture.id)].user_recordings) if str(mongo_gesture.id) in account_model.gestures else 0,
-                recording_complete_percentage = min(100, 100*int((len(account_model.gestures[str(mongo_gesture.id)].user_recordings) if str(mongo_gesture.id) in account_model.gestures else 0) / MIN_RECORDINGS))
+                recording_complete_percentage = min(100,
+                    100*int((len(account_model.gestures[str(mongo_gesture.id)].user_recordings)
+                    if str(mongo_gesture.id) in account_model.gestures else 0)
+                    / mongo_gesture.num_recordings_required))
             )
             for mongo_gesture in [await MongoGestureInformation.get(gesture_id) for gesture_id in mongo_model.gestures] if mongo_gesture is not None
-        ]
+        ],
+        num_rest_recordings = 0
+            if str(mongo_model.id) not in account_model.models else
+            len(account_model.models[str(mongo_model.id)].rest_data_file_locations)
     )
 
 @app.get('/pre_made_models', response_model = PreMadeModels, tags=['PreMadeModels'])

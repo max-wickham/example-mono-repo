@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 from schemas.mongo_models.account_models import MongoAccount
 from libs.authentication.user_token_auth import TokenData
 
-from app.api.configs.configs import environmentSettings
+from app.api.configs import environmentSettings
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

@@ -12,4 +12,7 @@ class MongoPreMadeModel(Document):
     name: str
     gestures : list[PydanticObjectId]
     model_weights : FileName
-    creation_date : int = Field(default_factory=datetime.now().timestamp)
+    creation_date : int = Field(default_factory= lambda: int(datetime.now().timestamp()))
+    sample_period_s : float = 0.5
+    sample_number : int = 500
+    sample_frequency_hz : int = 1000

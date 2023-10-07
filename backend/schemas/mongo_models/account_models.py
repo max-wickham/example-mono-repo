@@ -19,16 +19,17 @@ class TrainingState(Enum):
 
 class TrainingInformation(BaseModel):
     '''Information about a training of a model'''
-    creation_date : int = Field(default_factory=datetime.now().timestamp)
+    creation_date : int = Field(default_factory=lambda: int(datetime.now().timestamp()))
 
 class UserFineTunedModel(BaseModel):
     '''User fine tuned model'''
     pre_made_model_id: PydanticObjectId
     name : str
-    creation_date : int = Field(default_factory=datetime.now().timestamp)
+    creation_date : int = Field(default_factory=lambda: int(datetime.now().timestamp()))
     training_logs : list[TrainingInformation] = []
     training_state: TrainingState = TrainingState.NOT_STARTED
     model_location: str = ''
+    rest_data_file_locations: list[str] = []
 
 class MongoAccountGestureRecordings(BaseModel):
     '''Information about a gesture for a user'''

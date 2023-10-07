@@ -13,5 +13,6 @@ export type GestureInfo = {
     gesture_id: string;
     num_recordings: number;
     recording_complete_percentage: number;
+    continuous: boolean;
 };
 

@@ -16,6 +16,10 @@ export default {
         await RecordingStreamingService.getSaveRecordingSaveRecordingSessionIdGestureIdGet(session_id, gesture_id);
     },
 
+    save_rest_recording : async (model_id: string, session_id: string)=> {
+        await RecordingStreamingService.getSaveRestRecordingSaveRestRecordingSessionIdModelIdGet(session_id, model_id);
+    },
+
     connect: async (modelID: string, streamID: string, modelName: string)=> {
         if (global_ws != null){
             global_ws.close();

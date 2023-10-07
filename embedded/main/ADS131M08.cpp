@@ -19,7 +19,7 @@ volatile uint8_t sample_counter = 0;
 // Has received data since the last index_in_frame increment
 volatile bool receivedFrame[NUM_ADS] = {false};
 // Interrupt flag
-volatile bool requiresDataLoad[NUM_ADS] = {false};
+volatile int requiresDataLoad[NUM_ADS] = {0};
 
 const int selectPins[NUM_ADS] = ADS131_SELECT_PINS;
 const int resetPins[NUM_ADS] = ADS131_RESET_PINS;
@@ -58,7 +58,7 @@ template <int adsCallbackIndex>
 void ADS131_dataReadyISR(void)
 {
   // Make a request to load data
-  requiresDataLoad[adsCallbackIndex] = true;
+  requiresDataLoad[adsCallbackIndex] += 1;
 }
 
 /*
@@ -83,10 +83,13 @@ void ADS131M08::begin(void)
   loop_ads
   {
     pinMode(resetPins[adsIndex], OUTPUT);
-    digitalWrite(resetPins[adsIndex], HIGH);
     pinMode(selectPins[adsIndex], OUTPUT);
-    digitalWrite(selectPins[adsIndex], HIGH);
     pinMode(drdyPins[adsIndex], INPUT_PULLUP);
+  }
+  loop_ads
+  {
+    digitalWrite(resetPins[adsIndex], HIGH);
+    digitalWrite(selectPins[adsIndex], HIGH);
   }
   pinMode(DEBUG_PIN, OUTPUT);
   digitalWrite(DEBUG_PIN, LOW);
@@ -101,8 +104,10 @@ void ADS131M08::begin(void)
   // dummy transfers to clear data buffer
   loop_ads
   {
+    enADS(adsIndex);
     spiCommFrame(adsIndex, &responseArr[0]);
     spiCommFrame(adsIndex, &responseArr[0]);
+    disADS(adsIndex);
   }
 
   // Attach the ISR
@@ -113,13 +118,15 @@ void ADS131M08::hw_reset() // Hardware Reset
 {
   loop_ads
   {
-    Serial.println("HW Reset");
     digitalWrite(resetPins[adsIndex], LOW);
-    delay(ADS131_RESET_PULSE);
-    digitalWrite(resetPins[adsIndex], HIGH);
-    delay(ADS131_RESET_DELAY);
-    delay(1); // time for registers to settle 1 ms
   }
+  delay(ADS131_RESET_PULSE);
+  loop_ads
+  {
+    digitalWrite(resetPins[adsIndex], HIGH);
+  }
+  delay(ADS131_RESET_DELAY);
+  delay(1); // time for registers to settle 1 ms
 }
 
 void ADS131M08::startData(void) // Begin the filling of the data frame with conversions
@@ -210,7 +217,7 @@ void ADS131M08::STANDBY()
 
 #ifndef ADS131_POLLING
     // Detach the ISR
-    detachInterrupt(drdyPins[adsIndex]);
+    // detachInterrupt(drdyPins[adsIndex]);
 #endif
   }
   return;
@@ -512,13 +519,12 @@ void loadData(int adsIndex)
 
 void ADS131M08::run()
 {
-  // Handle any load data requests from each ads
   loop_ads
   {
     // Serial.println(requiresDataLoad[adsIndex]);
-    if (requiresDataLoad[adsIndex])
+    if (requiresDataLoad[adsIndex] > 0)
     {
-      requiresDataLoad[adsIndex] = false;
+      requiresDataLoad[adsIndex] -= 1;
       loadData(adsIndex);
     }
   }

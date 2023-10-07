@@ -8,8 +8,10 @@
  */
 export type Gesture = {
     name: string;
-    num_recordings: string;
-    recording_completion_percentage: string;
+    num_recordings: number;
+    recording_completion_percentage: number;
     gesture_id: string;
+    sample_frequency_hz: number;
+    continuous: boolean;
 };
 

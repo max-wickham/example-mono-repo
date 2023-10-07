@@ -33,4 +33,29 @@ export class RecordingStreamingService {
         });
     }
 
+    /**
+     * Get Save Rest Recording
+     * Take the last 0.5 seconds of recording data, download it and send it to the recording upload service
+     * @param sessionId
+     * @param modelId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static getSaveRestRecordingSaveRestRecordingSessionIdModelIdGet(
+        sessionId: string,
+        modelId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/save_rest_recording/{session_id}/{model_id}',
+            path: {
+                'session_id': sessionId,
+                'model_id': modelId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

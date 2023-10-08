@@ -3,14 +3,14 @@
 #include <WiFi.h>
 #include <atomic>
 #include <memory>
-#include <HTTPClient.h>
+// #include <HTTPClient.h>
 #include "esp_private/wifi.h"
 #include "esp_wifi.h"
 #include <WiFiUdp.h>
 #include "ADS131M08.h"
 
-#include <WebServer.h> // WebServer Library for ESP32
-#include <WebSocketsClient.h>
+// #include <WebServer.h> // WebServer Library for ESP32
+// #include <WebSocketsClient.h>
 
 #define FRAME_SIZE (NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT * NUM_CONVERSIONS_PER_FRAME * NUM_ADS)
 #define MAX_READINGS FRAME_SIZE * 3
@@ -26,7 +26,7 @@ WiFiUDP udp;
 int sessionID = 12;
 class StreamController
 {
-    WebSocketsClient webSocket; // websocket client class instance
+    // WebSocketsClient webSocket; // websocket client class instance
 
     int readingIndex = 0;
 
@@ -55,7 +55,7 @@ class StreamController
                 // Serial.println(httpResponseCode);
                 // http.end();
                 // uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
-                udp.beginPacket(serverAddress.c_str()), 8888);
+                udp.beginPacket(serverAddress.c_str(), 8888);
                 // Send the header packets
                 udp.write(0xAA);
                 // udp.write(&(streamID[0]), 4);
@@ -174,7 +174,7 @@ public:
 
     void run()
     {
-        webSocket.loop();
+        // webSocket.loop();
     }
 
     bool isConnected()

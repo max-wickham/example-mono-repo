@@ -15,7 +15,7 @@
 #define FRAME_SIZE (NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT * NUM_CONVERSIONS_PER_FRAME * NUM_ADS)
 #define MAX_READINGS FRAME_SIZE * 3
 
-const std::string serverAddress = "165.22.123.190";
+const std::string serverAddress = "138.68.161.150";
 const int serverPort = 8005;
 const std::string route = "/sample/";
 // const char* test_message = "test message";
@@ -55,7 +55,7 @@ class StreamController
                 // Serial.println(httpResponseCode);
                 // http.end();
                 // uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
-                udp.beginPacket("165.22.123.190", 8888);
+                udp.beginPacket(serverAddress.c_str()), 8888);
                 // Send the header packets
                 udp.write(0xAA);
                 // udp.write(&(streamID[0]), 4);

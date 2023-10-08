@@ -447,9 +447,9 @@ void loadData(int adsIndex)
   const int header_offset = 0;
 #endif
 
-  Serial.println("Interrupt Triggered");
-  Serial.print("ADS Index: ");
-  Serial.println(adsIndex);
+  // Serial.println("Interrupt Triggered");
+  // Serial.print("ADS Index: ");
+  // Serial.println(adsIndex);
 
   if (frame_Running && (index_in_frame < NUM_CONVERSIONS_PER_FRAME))
   {
@@ -480,7 +480,7 @@ void loadData(int adsIndex)
     bool allFramesReceived = true;
     loop_ads
     {
-      Serial.println(receivedFrame[adsIndex]);
+      // Serial.println(receivedFrame[adsIndex]);
       allFramesReceived = allFramesReceived && receivedFrame[adsIndex];
     }
 
@@ -501,8 +501,8 @@ void loadData(int adsIndex)
       }
       index_in_frame++;
     }
-    Serial.println("Index in frame");
-    Serial.println(index_in_frame);
+    // Serial.println("Index in frame");
+    // Serial.println(index_in_frame);
     if (index_in_frame == NUM_CONVERSIONS_PER_FRAME)
     {
       frame_Ready = true;

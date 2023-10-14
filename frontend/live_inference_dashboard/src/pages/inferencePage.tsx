@@ -20,7 +20,7 @@ import {
     CardTitle
 } from "reactstrap";
 import { atom, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { gesturesAtom, inferenceMessageAtom, preMadeModelsAtom } from "../models/atoms/apiAtoms";
+import { activeAtom, gesturesAtom, inferenceMessageAtom, preMadeModelsAtom } from "../models/atoms/apiAtoms";
 import inferenceManager from "../models/managers/inferenceManager";
 import { inferenceConnectionAtom, lastRefreshTimeAtom, selectedModelIDAtom } from "../models/atoms/UIAtoms";
 import modelsManager from "../models/managers/modelsManager";
@@ -115,7 +115,7 @@ function takeRestRecordings() {
     // Also reload the models with a short delay after
     if (getRecoil(restRecordingModalAtom) && selectedModel !== null && selectedModel !== undefined) {
         console.log(selectedModel.sample_period_s * 1000);
-        inferenceManager.save_rest_recording(selectedModel.model_id, "12");
+        inferenceManager.save_rest_recording(selectedModel.model_id, "201326592");
         setTimeout(takeRestRecordings, selectedModel.sample_period_s * 1000);
     }
 }
@@ -123,9 +123,20 @@ function takeRestRecordings() {
 const DeviceBar = memo(function () {
     const bluetoothStateValue = useRecoilValue(bluetoothStateAtom);
     const deviceStateValue = useRecoilValue(deviceStateAtom);
-
+    const active = useRecoilValue(activeAtom);
     const height = 50;
     const padding = 5;
+
+    useEffect(() => {
+        // Define a function to make the API call
+        const fetchData = async () => {
+            await inferenceManager.stream_active("201326592");
+        };
+        fetchData();
+        // console.log('set')
+        const intervalId = setInterval(fetchData, 2000);
+        return () => clearInterval(intervalId);
+    }, []);
 
     const barContent = bluetoothStateValue == null || !bluetoothStateValue.connected ?
         <>
@@ -137,7 +148,12 @@ const DeviceBar = memo(function () {
                 <Row className="justify-content-begin">
                     <Col xs="auto"><CardText style={{ marginRight: 30, width: 400 }}><h4>Device ID: 124325413</h4></CardText></Col>
                     <Col xs="auto"><Alert color="success" className={css(styles.small_alert)}>Wifi Connected</Alert></Col>
-                    <Col xs="auto"><Alert color="success" className={css(styles.small_alert)}>Streaming</Alert></Col>
+                    {
+                        active ?
+                            <Col xs="auto"><Alert color="success" className={css(styles.small_alert)}>Streaming</Alert></Col> :
+                            <Col xs="auto"><Alert color="danger" className={css(styles.small_alert)}>Disconnected</Alert></Col>
+                    }
+
                 </Row>
             </Col>
 
@@ -203,7 +219,7 @@ const ModelsCard = function () {
                                     </Col> : <></>}
                                     {model.training_state === TrainingState.IN_PROGRESS ?
                                         <Col xs="auto">
-                                            <Alert color="warning" className={css(styles.alert)}>Training</Alert>
+                                            <Alert color="warning" className={css(styles.alert)}>Training {model.training_percentage}%</Alert>
                                         </Col> : <></>}
                                     {requiresRecordings(model) ?
                                         <Col xs="auto">
@@ -238,9 +254,10 @@ const ModelsCard = function () {
                                     </Col>
                                     <Col xs="auto">
                                         {true ?
-                                            <Button color="danger" className={css(styles.button)} outline onClick={() => { setRestRecordingModal(true); setRecoil(selectedModelIDAtom, model.model_id);
+                                            <Button color="danger" className={css(styles.button)} outline onClick={() => {
+                                                setRestRecordingModal(true); setRecoil(selectedModelIDAtom, model.model_id);
                                                 setTimeout(takeRestRecordings, model.sample_period_s * 1000);
-                                                 }}>Collect Rest Data</Button> : <></>}
+                                            }}>Collect Rest Data</Button> : <></>}
                                     </Col>
                                 </Row>
                             </Col>
@@ -279,7 +296,10 @@ const GesturesCard = function () {
                                     <Row className="justify-content-end">
                                         <Col xs="auto">
                                             {true ?
-                                                <Button className={css(styles.button)} outline onClick={() => { }}>Manage Recording</Button> : <></>}
+                                                <Button className={css(styles.button)} outline onClick={async () => {
+                                                    await recordingsManager.clearGesture(gesture.gesture_id);
+                                                    await recordingsManager.getGestures();
+                                                }}>Delete Recording</Button> : <></>}
                                         </Col>
                                     </Row>
                                 </Col>
@@ -322,8 +342,15 @@ const RecordingCard = memo(function () {
         // Also reload the models with a short delay after
         if (getRecoil(isRecordingAtom) && selectedGesture !== null && selectedModel !== undefined) {
             console.log("sample");
-            inferenceManager.save_recording(selectedGesture.gesture_id, "12");
-            setTimeout(continuousSamples, selectedModel.sample_period_s * 1000);
+            inferenceManager.save_recording(selectedGesture.gesture_id, "201326592");
+            if (selectedGesture.continuous) {
+                console.log('continous')
+                setTimeout(continuousSamples, selectedModel.sample_period_s * 1000);
+            } else {
+                console.log('not continous')
+                setSquareGreen(false);
+                setIsRecording(false);
+            }
         }
     }
 
@@ -331,21 +358,25 @@ const RecordingCard = memo(function () {
 
     function runSquareCounter() {
         setIsRecording(true);
-        console.log(isRecording)
+        console.log("hello");
+
         setTimeout(() => { setIsRecording(true); console.log(isRecording); setSquareGreen(false); console.log(isRecording); }, 10);
-        setTimeout(() => { setSquareGreen(true) }, greyTime);
+
+
         if (selectedModel !== undefined && selectedGesture !== null) {
-            if (selectedGesture.continuous) {
-                setTimeout(continuousSamples, greyTime + selectedModel.sample_period_s)
-            } else {
-                setTimeout(() => {
-                    if (isRecording && selectedGesture !== null) {
-                        inferenceManager.save_recording(selectedGesture?.gesture_id, "12");
-                    }
-                    setSquareGreen(false);
-                    setTimeout(() => { modelsManager.getPreMadeModels() }, selectedModel === undefined ? greyTime : greyTime + selectedModel.sample_period_s + 100);
-                }, greyTime + selectedModel.sample_period_s);
-            }
+            setTimeout(() => { console.log('heello'); setSquareGreen(true) }, greyTime);
+            // setTimeout(() => { console.log('heello'); setSquareGreen(false) }, greyTime + 1000);
+            // if (selectedGesture.continuous) {
+            setTimeout(continuousSamples, greyTime + selectedModel.sample_period_s * 1000)
+            // } else {
+            //     setTimeout(() => {
+            //         if (isRecording && selectedGesture !== null) {
+            //             inferenceManager.save_recording(selectedGesture?.gesture_id, "201326592");
+            //         }
+            //         setSquareGreen(false);
+            //         setTimeout(() => { modelsManager.getPreMadeModels() }, selectedModel === undefined ? greyTime : greyTime + selectedModel.sample_period_s + 100);
+            //     }, greyTime + selectedModel.sample_period_s);
+            // }
         }
     }
 
@@ -433,7 +464,7 @@ const RestRecordingCard = memo(function () {
             <Col><Row className="justify-content-end">
                 <Button
                     color="danger"
-                    onClick={() => {setRecoil(restRecordingModalAtom, false);}}
+                    onClick={() => { setRecoil(restRecordingModalAtom, false); }}
                     style={{ width: 100, marginRight: 10 }}
                 >Exit</Button></Row></Col>
         </Row>

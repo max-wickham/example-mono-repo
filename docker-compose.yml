@@ -174,33 +174,33 @@ services:
     #   - account-service
     #   - recording-upload-service
 
-  live-inference-dashboard:
-    profiles: ["backendfull"]
-    build:
-      context: ./frontend/live_inference_dashboard
-      dockerfile: dev.Dockerfile
-    volumes:
-      - ./frontend/live_inference_dashboard/start.sh:/app/start.sh
-      - ./frontend/live_inference_dashboard/src:/app/src
-      - ./frontend/live_inference_dashboard/node_modules:/app/node_modules
-      - ./frontend/live_inference_dashboard/package.json:/app/package.json
-    ports:
-      - "4000:3000"
-    environment:
-      - secret=secret
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - token_url=http://localhost:8080/token
-      - mongo_database_url=mongodb://mongo:27017/
-      - ENV=DEV
-      - REDIS_URL=redis://redis
-      - API_KEY=test
-      - PYTHONUNBUFFERED=1
-    networks:
-     - vpcbr
-    depends_on:
-      - account-service
-      - recording-upload-service
-      - model-service
+  # live-inference-dashboard:
+  #   profiles: ["backendfull"]
+  #   build:
+  #     context: ./frontend/live_inference_dashboard
+  #     dockerfile: dev.Dockerfile
+  #   volumes:
+  #     - ./frontend/live_inference_dashboard/start.sh:/app/start.sh
+  #     - ./frontend/live_inference_dashboard/src:/app/src
+  #     - ./frontend/live_inference_dashboard/node_modules:/app/node_modules
+  #     - ./frontend/live_inference_dashboard/package.json:/app/package.json
+  #   ports:
+  #     - "4000:3000"
+  #   environment:
+  #     - secret=secret
+  #     - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+  #     - token_url=http://localhost:8080/token
+  #     - mongo_database_url=mongodb://mongo:27017/
+  #     - ENV=DEV
+  #     - REDIS_URL=redis://redis
+  #     - API_KEY=test
+  #     - PYTHONUNBUFFERED=1
+  #   networks:
+  #    - vpcbr
+  #   depends_on:
+  #     - account-service
+  #     - recording-upload-service
+  #     - model-service
 
   fake-data-gen:
     profiles: ["backendfull", "stream"]

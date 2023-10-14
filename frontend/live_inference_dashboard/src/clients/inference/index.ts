@@ -12,3 +12,4 @@ export type { ValidationError } from './models/ValidationError';
 
 export { DefaultService } from './services/DefaultService';
 export { RecordingStreamingService } from './services/RecordingStreamingService';
+export { StreamInfoService } from './services/StreamInfoService';

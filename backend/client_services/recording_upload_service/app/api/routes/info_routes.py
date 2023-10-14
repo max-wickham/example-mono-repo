@@ -55,3 +55,26 @@ async def get_gestures(token_data: TokenData = Depends(token_authentication)) ->
             sample_frequency_hz = gesture.sampling_frequency_hz
         )
     return response_gestures
+
+@app.delete('/gesuture_recordings/{gesture_id}', tags=["GestureInfo"])
+async def delete_gesture_recordings(gesture_id: str, token_data: TokenData = Depends(token_authentication)):
+    '''Upload a binary recording file of the sensor data'''
+    mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))
+    if mongo_account is None:
+        raise AccountNotFoundException(token_data.account_id)
+    # TODO delete gestures from S3 !!!!!
+    if gesture_id in mongo_account.gestures:
+        mongo_account.gestures[gesture_id].user_recordings = []
+        mongo_account.gestures[gesture_id].processed_user_recordings = []
+        await mongo_account.save()
+
+@app.delete('/rest_recordings/{model_id}', tags=["GestureInfo"])
+async def delete_gesture_recordings(gesture_id: str, token_data: TokenData = Depends(token_authentication)):
+    '''Upload a binary recording file of the sensor data'''
+    mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))
+    if mongo_account is None:
+        raise AccountNotFoundException(token_data.account_id)
+    # TODO delete gestures from S3 !!!!!
+    if model_id in mongo_account.models:
+        mongo_account.models[model_id].rest_data_file_locations = []
+        await mongo_account.save()

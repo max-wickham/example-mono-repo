@@ -51,8 +51,8 @@ async def main():
         ])
 
     mongo_account = MongoAccount(
-        name='test',
-        email='test',
+        name='Matteo',
+        email='mtt.pzz56@gmail.com',
         password_hash=pwd_context.hash('test'),
         gestures={},
         models={}
@@ -60,7 +60,7 @@ async def main():
     await mongo_account.save()
 
     gestures = []
-    gesture_name = ['right','left','up','down']
+    gesture_name = ['Hold Right','Hold Left','Hold Up','Hold Down']
     for name in gesture_name:
         mongo_gesture = MongoGestureInformation(
             name=name,
@@ -72,25 +72,71 @@ async def main():
 
         await mongo_gesture.save()
         gestures.append(mongo_gesture)
+    mongo_gesture = MongoGestureInformation(
+            name='Click',
+            comments='comments',
+            video_link='na',
+            photo_link='na',
+            continuous=False
+        )
+
+    await mongo_gesture.save()
+    gestures.append(mongo_gesture)
 
     pre_made_model = MongoPreMadeModel(
-        name = 'Mouse Model',
+        name = 'Mouse',
         gestures = [gesture.id for gesture in gestures],
-        model_weights = 'model_saving',
-        sample_period_s=0.5
+        model_weights = 'mouse_model',
+        sample_period_s=0.25
+    )
+
+    await pre_made_model.save()
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Penguin Model',
+        gestures = [gesture.id for gesture in gestures[:2]],
+        model_weights = 'penguin_model',
+        sample_period_s=0.25
     )
 
     await pre_made_model.save()
 
 
-    mongo_account.models[str(pre_made_model.id)] = UserFineTunedModel(
-        name = 'Na',
-        training_state = TrainingState.COMPLETE,
-        model_location = 'model_saving',
-        pre_made_model_id = pre_made_model.id,
-    )
+    # gestures = []
+    # gesture_name = ['Swipe Right', 'Swipe Left']
+    # for name in gesture_name:
+    #     mongo_gesture = MongoGestureInformation(
+    #         name=name,
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=False
+    #     )
 
-    await mongo_account.save();
+    #     await mongo_gesture.save()
+    #     gestures.append(mongo_gesture)
+
+    # mongo_account.models[str(pre_made_model.id)] = UserFineTunedModel(
+    #     name = 'Na',
+    #     training_state = TrainingState.COMPLETE,
+    #     model_location = 'model_saving',
+    #     pre_made_model_id = pre_made_model.id,
+    # )
+
+
+    # mongo_account.models[str(pre_made_model.id)] = UserFineTunedModel(
+    #     name = 'Na',
+    #     training_state = TrainingState.COMPLETE,
+    #     model_location = 'model_saving',
+    #     pre_made_model_id = pre_made_model.id,
+    # )
+
+    # await mongo_account.save();
+
+
+
+
+
     # mongo_training_model = MongoTrainingModel(
     #     creation_date = time.time(),
     #     name = 'test_model',
@@ -193,23 +239,29 @@ async def main():
     # print('loading data')
     # data = read_from_pickle('/X_test.pkl')
     # print(data.shape)
+
     # NUM_FEATURES = 8
-    # await redis.delete(str(12))
+    # FREQUENCY = 2000
+    # MAX_LENGTH = 100000
+    # SESSION_ID = 201326592
+    # BYTES_PER_INT = 3
+
+    # await redis.delete(str(SESSION_ID))
     # while True:
     #     int_array = [int(i) for i in range(NUM_FEATURES)]
     #     byte_array = bytearray()
     #     # Iterate through the float values and pack them as float32 (4 bytes each)
     #     for value in int_array:
-    #         packed_value = value.to_bytes(3, byteorder='big', signed=True)
+    #         packed_value = value.to_bytes(BYTES_PER_INT, byteorder='big', signed=True)
     #         byte_array.extend(packed_value)
 
     #     base64_encoded = base64.b64encode(byte_array)
     #     base64_encoded_str = base64_encoded.decode('utf-8')
-    #     await redis.lpush(str(12), base64_encoded_str)
-    #     time.sleep(0.00005)
-    #     length = await redis.llen(str(12))
-    #     if length > 100000:
-    #         await redis.ltrim(str(12), int(length / 2), length)
+    #     await redis.lpush(str(SESSION_ID), base64_encoded_str)
+    #     time.sleep(1 / FREQUENCY)
+    #     length = await redis.llen(str(SESSION_ID))
+    #     if length > MAX_LENGTH:
+    #         await redis.ltrim(str(SESSION_ID), int(length / 2), length)
 
 
 

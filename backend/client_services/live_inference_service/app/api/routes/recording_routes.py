@@ -22,6 +22,8 @@ async def get_save_recording(session_id : str, gesture_id: str, token_data: Toke
         raise Exception
 
     data_length = await redis.llen(session_id)
+    print(data_length)
+    print(session_id)
     # TODO check that the current session if has the correct recording rate
 
     if data_length < 2*gesture.num_samples_per_recording:
@@ -74,3 +76,8 @@ async def get_save_rest_recording(session_id : str, model_id: str, token_data: T
     print(response.status_code)
     if response.status_code != 200 and response.status_code != 204:
         raise Exception
+
+
+@app.get('/stream_active/{stream_id}', tags=["StreamInfo"], response_model=bool)
+async def get_stream_active(stream_id: str) -> bool:
+    return (await redis.object('idletime', stream_id)) < 1

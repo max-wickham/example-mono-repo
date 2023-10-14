@@ -9,7 +9,7 @@ from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.account_models import MongoAccountGestureRecordings
 
-from schemas.mongo_models.account_models import MongoAccount
+from schemas.mongo_models.account_models import MongoAccount, UserFineTunedModel
 from libs.authentication.user_token_auth import TokenData, token_authentication
 
 from app.api.main import app, s3
@@ -63,8 +63,14 @@ async def post_rest_recording(
     contents = await recording.read()
     file_obj = io.BytesIO(contents)
     s3.upload_fileobj(file_obj, 'recordings', filename)
+
     if model_id not in mongo_account.models:
-        raise Exception
+        # TODO do this as a method in the user class !!!!!!!!
+        mongo_account.models[model_id] = UserFineTunedModel(
+            name = 'na',
+            pre_made_model_id=PydanticObjectId(model_id),
+            model_location=str(uuid.uuid4())
+        )
     mongo_account.models[model_id].rest_data_file_locations.append(filename)
 
     await mongo_account.save()

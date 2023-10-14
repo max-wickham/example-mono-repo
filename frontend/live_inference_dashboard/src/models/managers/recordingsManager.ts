@@ -16,4 +16,9 @@ export default {
         }
     },
 
+    clearGesture: async function(gestureID: string)  {
+        console.log("deleteing gestures");
+        await GestureInfoService.deleteGestureRecordingsGesutureRecordingsGestureIdDelete(gestureID);
+    }
+
 }

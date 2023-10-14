@@ -26,6 +26,7 @@ import { useRecoilValue } from "recoil";
 import { authAtom } from "./models/atoms/apiAtoms";
 import { LoginPage } from "./pages/loginPage";
 import modelsManager from "./models/managers/modelsManager";
+import { useEffect } from "react";
 
 const bluetoothController = new BluetoothController(
   (device)=> {}, () => {}
@@ -37,9 +38,17 @@ bluetoothController.add_callback("/test_response", async (message) => {
 })
 
 function App () {
+  // useEffect(() => {
+  //   // @ts-ignore
+  //   document.body.style.zoom = "70%";
+  // }, []);
   const authValue = useRecoilValue(authAtom);
 
-  return authValue.loggedIn? <InferencePage></InferencePage> : <LoginPage></LoginPage>;
+  return <>
+{/*  @ts-ignore */}
+
+    {authValue.loggedIn? <InferencePage></InferencePage> : <LoginPage></LoginPage>}
+  </>
 }
 
 export default App;

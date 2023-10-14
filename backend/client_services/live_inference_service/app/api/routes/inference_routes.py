@@ -7,7 +7,7 @@ import os
 import time
 
 
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 from beanie import PydanticObjectId
 import numpy as np
 import tensorflow as tf
@@ -16,7 +16,7 @@ from schemas.mongo_models.account_models import MongoAccount, TrainingState
 from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 
-from app.api.main import app, redis, s3
+from app.api.main import app, redis, s3, s3_resource
 from app.api.tools.tools import data_to_numpy
 
 NUM_CHANNELS = 8
@@ -39,10 +39,29 @@ def make_prediction(model: tf.keras.Model, data):
 
 
 def real_time_rms(data):
-    return np.mean(np.sqrt(np.mean((data)**2, axis=-1)))
+    return np.mean(np.sqrt(np.mean(np.array(data)**2, axis=-1)))
 
 
 count = 0
+
+
+
+async def load_rest_data(mongo_account : MongoAccount, pre_trainined_model : MongoPreMadeModel):
+    '''
+    Load the training data from S3 storage and construct a numpy array using it
+    The data needs to be converted from binary form to the correct format
+    '''
+    data = []
+
+
+    for location in mongo_account.models[str(pre_trainined_model.id)].rest_data_file_locations:
+        # print(recordings)
+        s3_object = s3_resource.get_object(Bucket='recordings', Key=location)
+        body = s3_object['Body']
+        numpy_data = pickle.loads(body.read())
+        data.append(np.array(numpy_data))
+
+    return np.array(data)
 
 
 # TODO authentication
@@ -96,10 +115,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
     rms_frac = 0.06
     rms_time = time.time()
 
-    while True:
-        new_data_length = await redis.llen(str(session_id))
 
-        if new_data_length - data_length > 250:
+
+    # rest_data = await load_rest_data(mongo_account, pre_trained_model)
+    # baseline_rms = real_time_rms(rest_data)
+
+    while True:
+        try:
             data_length = await redis.llen(str(session_id))
             data = await redis.lrange(str(session_id), data_length-NUM_READINGS_PER_INFERENCE, -1)
             data = np.array(data_to_numpy(data))
@@ -112,12 +134,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
             saved = saved[-20:]
                 # saved = []
 
-            ########## Update baseline rms
-            rms_period = time.time() - rms_time
-            rms_time = time.time()
-            baseline_rms = real_time_rms(data) * rms_frac + (1-rms_frac) * baseline_rms
-            rms_frac = 1 - np.pow(1 / 2, 1 / (TIME_TO_HALF_RMS_S / rms_period))
-
             ########## Run inference
             result = 'Rest'
             # print('RMS', baseline_rms, real_time_rms(data))
@@ -125,11 +141,23 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
                 inference = make_prediction(model, data)
                 print(inference.numpy()[0])
                 if tf.reduce_max(inference).numpy() > 0.99:
-                    max_index = np.argmax(inference.numpy()[0])
-                    result = gestures[max_index].name
+                    max_index = int(np.argmax(inference.numpy()[0]))
+                    gesture = gestures[max_index]
+                    assert gesture is not None
+                    result = gesture.name
+            else:
+                ########## Update baseline rms
+                rms_period = time.time() - rms_time
+                rms_time = time.time()
+                # baseline_rms = real_time_rms(data) * rms_frac + (1-rms_frac) * baseline_rms
+                rms_frac = 1 - np.power(1 / 2, 1 / (TIME_TO_HALF_RMS_S / rms_period))
 
             await websocket.send_text(json.dumps({
                 "inference":result,
+            }))
+        except Exception as e:
+            await websocket.send_text(json.dumps({
+                "inference":"error",
             }))
         await asyncio.sleep(0.05)
 

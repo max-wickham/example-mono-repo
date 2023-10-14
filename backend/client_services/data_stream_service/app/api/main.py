@@ -6,7 +6,9 @@ import base64
 from redis.asyncio import from_url
 
 MAX_BUFFER_LENGTH = 200000
-PACKETS_SIZE = 48
+BYTES_PER_INT = 3
+NUM_CHANNELS = 8
+PACKETS_SIZE = BYTES_PER_INT * NUM_CHANNELS
 REDIS_URL = 'redis://redis'
 
 redis = from_url(REDIS_URL, decode_responses=True)
@@ -54,7 +56,7 @@ class UdpServerProtocol(asyncio.DatagramProtocol):
         asyncio.ensure_future(check_data_length())
 
 
-        print(f"Received data from {addr}: {len(message)}, {session_id}")
+        # print(f"Received data from {addr}: {len(message)}, {session_id}")
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()

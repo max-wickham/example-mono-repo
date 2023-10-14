@@ -26,6 +26,6 @@ export const deviceStateAtom = atom<{
     default : {
         wifi_connected : true,
         streaming: true,
-        stream_id: "12",
+        stream_id: "201326592",
     },
 });

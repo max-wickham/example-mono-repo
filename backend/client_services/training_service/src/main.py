@@ -45,6 +45,11 @@ else:
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY)
+    s3_resource = boto3.resource('s3',
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY
+                      )
 
 try:
     s3.create_bucket(Bucket='models')
@@ -84,29 +89,34 @@ async def model_training(request: TrainModelRequest):
         account.models[request.training_model_id] = UserFineTunedModel(
             name = 'na',
             pre_made_model_id=PydanticObjectId(request.training_model_id),
+            model_location=str(uuid.uuid4())
         )
 
     account.models[request.training_model_id].training_state = TrainingState.IN_PROGRESS
-    account.models[request.training_model_id].model_location=str(uuid.uuid4())
+    # account.models[request.training_model_id].model_location=str(uuid.uuid4())
     await account.save()
-    account = await MongoAccount.get(PydanticObjectId(request.account_id))
-    if account is None:
-        raise Exception
+    try:
+        account = await MongoAccount.get(PydanticObjectId(request.account_id))
+        if account is None:
+            raise Exception
 
-    pre_trainined_model = await MongoPreMadeModel.get(PydanticObjectId(request.training_model_id))
-    if pre_trainined_model is None:
-        raise Exception
-    # load the training data
-    training_data = await load_data(account, pre_trainined_model)
-    x_data, y_data = label_data(training_data)
-    # create and train the model
-    model = await train_model(x_data,y_data, pre_trainined_model, account)
-    # upload the model to the database
-    await upload_model_to_database(model, account, request.training_model_id)
-    # set the status to complete
-    account.models[request.training_model_id].training_state = TrainingState.COMPLETE
-    await account.save()
-
+        pre_trainined_model = await MongoPreMadeModel.get(PydanticObjectId(request.training_model_id))
+        if pre_trainined_model is None:
+            raise Exception
+        # load the training data
+        training_data = await load_data(account, pre_trainined_model)
+        x_data, y_data = label_data(training_data)
+        # create and train the model
+        model = await train_model(x_data,y_data, pre_trainined_model, account)
+        # upload the model to the database
+        await upload_model_to_database(model, account, request.training_model_id)
+        # set the status to complete
+        account.models[request.training_model_id].training_state = TrainingState.COMPLETE
+        await account.save()
+    except:
+        account = await MongoAccount.get(PydanticObjectId(request.account_id))
+        account.models[request.training_model_id].training_state = TrainingState.FAILED
+        await account.save()
 
 @global_celery.task(name=Tasks.MODEL_TRAINING_TASK)
 def model_training_task(request: str):
@@ -160,9 +170,10 @@ async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, a
     The model output dimensions need to be dictated by the number of gestures
     '''
     # TODO create and train the model
+    print(pre_trainined_model.model_weights)
     s3_folder = pre_trainined_model.model_weights
     bucket = s3_resource.Bucket('models')
-    local_dir = f'/tmp/{account.models[str(pre_trainined_model.id)].model_location}'
+    local_dir = f'/tmp/{pre_trainined_model.model_weights}'
     for obj in bucket.objects.filter(Prefix=s3_folder):
         target = obj.key if local_dir is None \
             else os.path.join(local_dir, os.path.relpath(obj.key, s3_folder))
@@ -173,6 +184,20 @@ async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, a
         bucket.download_file(obj.key, target)
 
     model = load_model(local_dir)
+
+    class CustomCallback(tf.keras.callbacks.Callback):
+        def __init__(self, n_epochs):
+            super().__init__()
+            self.n_epochs = n_epochs
+
+        async def on_epoch_end(self, epoch, logs=None):
+            if (epoch + 1) % self.n_epochs == 0:
+                print(f"Custom callback: Performing action at epoch {epoch + 1}")
+                pre_trainined_model.training_percentage = epoch / EPOCH_NUMS * 100
+                pre_trainined_model.save()
+
+
+
     history = model.fit(x_data, y_data, epochs=EPOCH_NUMS, batch_size=5, shuffle=True)
     return model
     # Load the model from the database

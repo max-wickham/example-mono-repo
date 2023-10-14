@@ -46,12 +46,22 @@ if environmentSettings.ENV == 'DEV':
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY
                       )
+    s3_resource = boto3.resource('s3',
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY
+                      )
 else:
     s3 = boto3.client('s3',
                       region_name=environmentSettings.S3_REGION,
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY)
+    s3_resource = boto3.resource('s3',
+                      endpoint_url=environmentSettings.S3_URL,
+                      aws_access_key_id=environmentSettings.S3_ID,
+                      aws_secret_access_key=environmentSettings.S3_KEY
+                      )
 
 # check if bucket already exists
 try:

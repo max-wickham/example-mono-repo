@@ -13,6 +13,7 @@ export type PreMadeModelInfo = {
     name: string;
     model_id: string;
     training_state: TrainingState;
+    training_percentage: number;
     gestures: Array<GestureInfo>;
     sample_period_s: number;
     num_rest_recordings: number;

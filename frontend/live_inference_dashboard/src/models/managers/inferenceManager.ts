@@ -1,7 +1,7 @@
 import { getRecoil, setRecoil } from "recoil-nexus";
-import { RecordingStreamingService } from "../../clients/inference";
+import { RecordingStreamingService, StreamInfoService } from "../../clients/inference";
 
-import { authAtom, inferenceMessageAtom } from "../atoms/apiAtoms";
+import { activeAtom, authAtom, inferenceMessageAtom } from "../atoms/apiAtoms";
 import { inferenceConnectionAtom } from "../atoms/UIAtoms";
 
 
@@ -20,12 +20,17 @@ export default {
         await RecordingStreamingService.getSaveRestRecordingSaveRestRecordingSessionIdModelIdGet(session_id, model_id);
     },
 
+    stream_active: async function (session_id : string) {
+        const active = await StreamInfoService.getStreamActiveStreamActiveStreamIdGet(session_id);
+        setRecoil(activeAtom, active);
+    },
+
     connect: async (modelID: string, streamID: string, modelName: string)=> {
         if (global_ws != null){
             global_ws.close();
         }
         const authValue = getRecoil(authAtom);
-        const ws = new WebSocket(`ws://localhost:8006/inference/${streamID}/${modelID}/${authValue.email}/${authValue.password}`);
+        const ws = new WebSocket(`ws://138.68.161.150:8006/inference/${streamID}/${modelID}/${authValue.email}/${authValue.password}`);
         ws.onopen =() => {
             console.log('connected')
             setRecoil(inferenceConnectionAtom, {

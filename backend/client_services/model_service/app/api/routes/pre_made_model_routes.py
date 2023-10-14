@@ -34,6 +34,7 @@ class PreMadeModelInfo(BaseModel):
     name: str
     model_id : str
     training_state : TrainingState
+    training_percentage : int
     gestures: list[GestureInfo]
     sample_period_s: float
     num_rest_recordings: int
@@ -49,6 +50,7 @@ async def mongo_model_to_model_info(mongo_model: MongoPreMadeModel, account_mode
         name=mongo_model.name,
         model_id=str(mongo_model.id),
         training_state= account_model.models[str(mongo_model.id)].training_state if str(mongo_model.id) in account_model.models else TrainingState.NOT_STARTED,
+        training_percentage = account_model.models[str(mongo_model.id)].training_percentage if str(mongo_model.id) in account_model.models else 0,
         sample_period_s=mongo_model.sample_period_s,
         gestures=[
             PreMadeModelInfo.GestureInfo(
@@ -73,7 +75,7 @@ async def mongo_model_to_model_info(mongo_model: MongoPreMadeModel, account_mode
 @app.get('/pre_made_models', response_model = PreMadeModels, tags=['PreMadeModels'])
 async def get_pre_made_models(token_data: TokenData = Depends(token_authentication)) -> PreMadeModels:
     '''Get a list of the pre made models'''
-    mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))
+    mongo_account : MongoAccount = await MongoAccount.get(PydanticObjectId(token_data.account_id))
     assert mongo_account is not None
     return PreMadeModels(
         models = [

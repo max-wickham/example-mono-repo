@@ -34,6 +34,11 @@ export const inferenceMessageAtom = atom<string|null>({
 });
 
 export const preMadeModelsAtom = atom<PreMadeModels|null>({
-    key: '',
+    key: 'preMadeModelsAtom',
     default: null
 });
+
+export const activeAtom = atom<boolean>({
+    key: 'activeAtom',
+    default: false
+})

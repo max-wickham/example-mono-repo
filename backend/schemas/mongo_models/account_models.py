@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import NewType
 
 from beanie import Document, PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conint
 
 LabelName = NewType('LabelName',str)
 
@@ -16,6 +16,7 @@ class TrainingState(Enum):
     NOT_STARTED = 'not_started'
     IN_PROGRESS = 'in_progress'
     COMPLETE = 'complete'
+    FAILED = 'failed'
 
 class TrainingInformation(BaseModel):
     '''Information about a training of a model'''
@@ -28,6 +29,7 @@ class UserFineTunedModel(BaseModel):
     creation_date : int = Field(default_factory=lambda: int(datetime.now().timestamp()))
     training_logs : list[TrainingInformation] = []
     training_state: TrainingState = TrainingState.NOT_STARTED
+    training_percentage: int = 0
     model_location: str = ''
     rest_data_file_locations: list[str] = []
 

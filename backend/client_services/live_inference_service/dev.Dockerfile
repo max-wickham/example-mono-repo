@@ -23,6 +23,8 @@ COPY ./backend/client_services/live_inference_service/requirements.txt /requirem
 
 RUN python3 -m pip install -r requirements.txt
 
+RUN python3 -m pip install boto3
+
 COPY ./backend/libs /libs
 COPY ./backend/schemas /schemas
 COPY ./backend/configs /configs

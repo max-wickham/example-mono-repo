@@ -46,7 +46,6 @@ void loop()
 
   if (adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
   {
-    Serial.println("frameReady");
     lastMeasurementTime = micros();
     streamController->addReading(adc.framePointer(), adc.frameSize());
     adc.newFrame();

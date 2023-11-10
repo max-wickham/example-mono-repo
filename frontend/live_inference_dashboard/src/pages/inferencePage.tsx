@@ -20,7 +20,7 @@ import {
     CardTitle
 } from "reactstrap";
 import { atom, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { activeAtom, gesturesAtom, inferenceMessageAtom, preMadeModelsAtom } from "../models/atoms/apiAtoms";
+import { activeAtom, channelCountAtom, channelFrequencyAtom, gesturesAtom, inferenceMessageAtom, preMadeModelsAtom } from "../models/atoms/apiAtoms";
 import inferenceManager from "../models/managers/inferenceManager";
 import { inferenceConnectionAtom, lastRefreshTimeAtom, selectedModelIDAtom } from "../models/atoms/UIAtoms";
 import modelsManager from "../models/managers/modelsManager";
@@ -31,6 +31,7 @@ import React from 'react';
 import recordingsManager from "../models/managers/recordingsManager";
 import authManager from "../models/managers/authManager";
 
+const STREAM_ID = "201326592";
 const rowElementHeight = 60;
 
 const styles = StyleSheet.create({
@@ -115,7 +116,7 @@ function takeRestRecordings() {
     // Also reload the models with a short delay after
     if (getRecoil(restRecordingModalAtom) && selectedModel !== null && selectedModel !== undefined) {
         console.log(selectedModel.sample_period_s * 1000);
-        inferenceManager.save_rest_recording(selectedModel.model_id, "201326592");
+        inferenceManager.save_rest_recording(selectedModel.model_id, STREAM_ID);
         setTimeout(takeRestRecordings, selectedModel.sample_period_s * 1000);
     }
 }
@@ -130,7 +131,9 @@ const DeviceBar = memo(function () {
     useEffect(() => {
         // Define a function to make the API call
         const fetchData = async () => {
-            await inferenceManager.stream_active("201326592");
+            await inferenceManager.stream_active(STREAM_ID);
+            await inferenceManager.stream_count(STREAM_ID);
+            await inferenceManager.stream_frequency(STREAM_ID);
         };
         fetchData();
         // console.log('set')
@@ -193,6 +196,8 @@ const ModelsCard = function () {
     const setRestRecordingModal = useSetRecoilState(restRecordingModalAtom);
     const deviceState = useRecoilValue(deviceStateAtom);
     const lastRefreshTime = useRecoilValue(lastRefreshTimeAtom);
+    const numChannels = useRecoilValue(channelCountAtom);
+    const sessionFrequency = useRecoilValue(channelFrequencyAtom);
 
     function requiresRecordings(model: PreMadeModelInfo) {
         var result = model.gestures.length > 0;
@@ -202,11 +207,16 @@ const ModelsCard = function () {
         return !result;
     }
 
+    console.log(numChannels);
+    console.log(sessionFrequency);
     return <Card className={css(styles.card)}>
         <CardHeader><h3 className={css(styles.header)}>Models</h3></CardHeader>
         <CardBody style={{ minHeight: 200, maxHeight: 200, overflowY: 'auto' }}>
             {preMadeModelsValue == null ? <></> :
-                preMadeModelsValue.models.map((model) => {
+                preMadeModelsValue.models
+                    .filter((model) => model.num_channels === numChannels)
+                    .filter((model) => model.sample_frequency_hz === sessionFrequency)
+                    .map((model) => {
                     // console.log(requiresRecordings(model));
                     return <>
                         <Row>
@@ -259,6 +269,10 @@ const ModelsCard = function () {
                                                 setTimeout(takeRestRecordings, model.sample_period_s * 1000);
                                             }}>Collect Rest Data</Button> : <></>}
                                     </Col>
+                                    <Col xs="auto">
+                                        {true ?
+                                            <Button color="danger" className={css(styles.button)} outline onClick={() => recordingsManager.clearRestData(model.model_id)}>Clear Rest Data</Button> : <></>}
+                                    </Col>
                                 </Row>
                             </Col>
                         </Row>
@@ -298,7 +312,7 @@ const GesturesCard = function () {
                                             {true ?
                                                 <Button className={css(styles.button)} outline onClick={async () => {
                                                     await recordingsManager.clearGesture(gesture.gesture_id);
-                                                    await recordingsManager.getGestures();
+                                                    await modelsManager.getGestures();
                                                 }}>Delete Recording</Button> : <></>}
                                         </Col>
                                     </Row>
@@ -342,7 +356,7 @@ const RecordingCard = memo(function () {
         // Also reload the models with a short delay after
         if (getRecoil(isRecordingAtom) && selectedGesture !== null && selectedModel !== undefined) {
             console.log("sample");
-            inferenceManager.save_recording(selectedGesture.gesture_id, "201326592");
+            inferenceManager.save_recording(selectedGesture.gesture_id, STREAM_ID);
             if (selectedGesture.continuous) {
                 console.log('continous')
                 setTimeout(continuousSamples, selectedModel.sample_period_s * 1000);
@@ -371,7 +385,7 @@ const RecordingCard = memo(function () {
             // } else {
             //     setTimeout(() => {
             //         if (isRecording && selectedGesture !== null) {
-            //             inferenceManager.save_recording(selectedGesture?.gesture_id, "201326592");
+            //             inferenceManager.save_recording(selectedGesture?.gesture_id, STREAM_ID);
             //         }
             //         setSquareGreen(false);
             //         setTimeout(() => { modelsManager.getPreMadeModels() }, selectedModel === undefined ? greyTime : greyTime + selectedModel.sample_period_s + 100);
@@ -483,7 +497,7 @@ export default function () {
         // Define a function to make the API call
         const fetchData = async () => {
             await modelsManager.getPreMadeModels();
-            await recordingsManager.getGestures();
+            await modelsManager.getGestures();
         };
         fetchData();
         // console.log('set')
@@ -514,7 +528,7 @@ export default function () {
             height: '100vh',
             position: 'absolute'
         }}>
-            <img src="/logo.png" style={{ marginLeft: 50, marginTop: 30 }}></img>
+            <img src="/logo.png" style={{ marginLeft: 50, marginTop: 30, width: 100, height: 80 }}></img>
             {/* <h2 style={{padding: 20, color: 'white'}}>MindFeed Dashboard</h2> */}
             {/* {separator} */}
 

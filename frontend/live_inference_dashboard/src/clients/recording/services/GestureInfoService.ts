@@ -45,4 +45,26 @@ export class GestureInfoService {
         });
     }
 
+    /**
+     * Delete Rest Recordings
+     * Upload a binary recording file of the sensor data
+     * @param modelId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static deleteRestRecordingsRestRecordingsModelIdDelete(
+        modelId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/rest_recordings/{model_id}',
+            path: {
+                'model_id': modelId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

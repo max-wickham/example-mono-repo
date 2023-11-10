@@ -23,7 +23,7 @@ uint8_t readingBuffer1[MAX_READINGS] = {0};
 uint8_t readingBuffer2[MAX_READINGS] = {0};
 
 WiFiUDP udp;
-int sessionID = 12;
+uint32_t sessionID = 12;
 class StreamController
 {
     // WebSocketsClient webSocket; // websocket client class instance
@@ -47,23 +47,12 @@ class StreamController
         {
             if (l_this->streaming)
             {
-                // WiFiClient client;
-                // HTTPClient http;
-                // http.begin(client,  "http://165.22.123.190:8005/sample/12");
-                // http.addHeader("Content-Type", "application/octet-stream");
-                // int httpResponseCode = http.POST(l_this->streamingBuffer, MAX_READINGS);
-                // Serial.println(httpResponseCode);
-                // http.end();
-                // uint8_t streamID[4] = {0x00, 0x00, 0x00, 0x0D};
                 udp.beginPacket(serverAddress.c_str(), 8888);
-                // Send the header packets
                 udp.write(0xAA);
-                // udp.write(&(streamID[0]), 4);
                 udp.write((uint8_t *)(&sessionID), 4);
                 // Send the data
                 udp.write(l_this->streamingBuffer,MAX_READINGS);
                 udp.endPacket();
-                // l_this->webSocket.sendBIN(l_this->streamingBuffer, MAX_READINGS);
             }
             l_this->streaming = false;
             if (l_this->writing){

@@ -19,6 +19,11 @@ export default {
     clearGesture: async function(gestureID: string)  {
         console.log("deleteing gestures");
         await GestureInfoService.deleteGestureRecordingsGesutureRecordingsGestureIdDelete(gestureID);
+    },
+
+    clearRestData: async function (modelID: string) {
+        console.log("deleteing rest data");
+        await GestureInfoService.deleteRestRecordingsRestRecordingsModelIdDelete(modelID);
     }
 
 }

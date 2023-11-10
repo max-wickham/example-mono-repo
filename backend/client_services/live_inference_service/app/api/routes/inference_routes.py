@@ -16,14 +16,9 @@ from schemas.mongo_models.account_models import MongoAccount, TrainingState
 from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.pre_made_models import MongoPreMadeModel
 
-from app.api.main import app, redis, s3, s3_resource
+from app.api.main import app, redis, s3, s3_client
 from app.api.tools.tools import data_to_numpy
 
-NUM_CHANNELS = 8
-INFERENCE_PERIOD_S = 0.5
-INFERENCE_FREQUENCY_HZ = 1000
-NUM_READINGS_PER_INFERENCE = int(INFERENCE_FREQUENCY_HZ * INFERENCE_PERIOD_S)
-# This is the time taken for the current rms value to account for half of the new rms value using exponentially weighted moving average
 TIME_TO_HALF_RMS_S = 2
 
 
@@ -32,17 +27,14 @@ def load_model(model_file_path : str):
     print(model.summary())
     return model
 
-def make_prediction(model: tf.keras.Model, data):
-    data = np.reshape(data, (1,NUM_READINGS_PER_INFERENCE,NUM_CHANNELS))
+def make_prediction(model: tf.keras.Model, data, num_channels: int, num_readings_per_inference: int):
+    data = np.reshape(data, (1,num_readings_per_inference,num_channels))
     prediction = model(data)
     return prediction
 
 
 def real_time_rms(data):
     return np.mean(np.sqrt(np.mean(np.array(data)**2, axis=-1)))
-
-
-count = 0
 
 
 
@@ -56,7 +48,7 @@ async def load_rest_data(mongo_account : MongoAccount, pre_trainined_model : Mon
 
     for location in mongo_account.models[str(pre_trainined_model.id)].rest_data_file_locations:
         # print(recordings)
-        s3_object = s3_resource.get_object(Bucket='recordings', Key=location)
+        s3_object = s3_client.get_object(Bucket='recordings', Key=location)
         body = s3_object['Body']
         numpy_data = pickle.loads(body.read())
         data.append(np.array(numpy_data))
@@ -67,7 +59,6 @@ async def load_rest_data(mongo_account : MongoAccount, pre_trainined_model : Mon
 # TODO authentication
 @app.websocket("/inference/{session_id}/{model_id}/{email}/{password}")
 async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: str, email: str, password: str):
-    global count
     await websocket.accept()
     # TODO dependent on time between readings
     ########## Load Account Information
@@ -83,6 +74,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
         assert gesture is not None
     model_info = mongo_account.models[model_id]
     assert model_info.training_state == TrainingState.COMPLETE
+
+    num_readings_per_inference = pre_trained_model.sample_number
 
     ########## Download Model
     s3_folder = model_info.model_location
@@ -103,10 +96,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
 
     ########## Load Inference Data
     data_length = await redis.llen(str(session_id))
-    while data_length < 1.2*NUM_READINGS_PER_INFERENCE:
+    while data_length < 1.2*num_readings_per_inference:
         data_length = await redis.llen(str(session_id))
         await asyncio.sleep(0.1)
-    data = await redis.lrange(str(session_id), data_length-NUM_READINGS_PER_INFERENCE, -1)
+    data = await redis.lrange(str(session_id), data_length-num_readings_per_inference, -1)
     data = data_to_numpy(data)
 
     data_length = await redis.llen(str(session_id))
@@ -117,13 +110,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
 
 
 
-    # rest_data = await load_rest_data(mongo_account, pre_trained_model)
-    # baseline_rms = real_time_rms(rest_data)
+    rest_data = await load_rest_data(mongo_account, pre_trained_model)
+    baseline_rms = real_time_rms(rest_data)
 
     while True:
         try:
             data_length = await redis.llen(str(session_id))
-            data = await redis.lrange(str(session_id), data_length-NUM_READINGS_PER_INFERENCE, -1)
+            data = await redis.lrange(str(session_id), data_length-num_readings_per_inference, -1)
             data = np.array(data_to_numpy(data))
             print(data[-1])
             saved.append(data)
@@ -138,13 +131,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
             result = 'Rest'
             # print('RMS', baseline_rms, real_time_rms(data))
             if real_time_rms(data) > 1.1 * baseline_rms:
-                inference = make_prediction(model, data)
-                print(inference.numpy()[0])
+                inference = make_prediction(model, data, pre_trained_model.num_channels, num_readings_per_inference)
+                print('inference',inference.numpy()[0])
                 if tf.reduce_max(inference).numpy() > 0.99:
                     max_index = int(np.argmax(inference.numpy()[0]))
-                    gesture = gestures[max_index]
-                    assert gesture is not None
-                    result = gesture.name
+                    if max_index >= len(gestures):
+                        result = 'Rest'
+                    else:
+                        gesture = gestures[max_index]
+                        assert gesture is not None
+                        result = gesture.name
             else:
                 ########## Update baseline rms
                 rms_period = time.time() - rms_time
@@ -157,43 +153,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: st
             }))
         except Exception as e:
             await websocket.send_text(json.dumps({
-                "inference":"error",
+                "inference":"Error",
             }))
         await asyncio.sleep(0.05)
-
-
-    # while True:
-    #     # print(data_length)
-    #     new_data = await redis.lrange(str(session_id), data_length, -1)
-    #     current_data_length = await redis.llen(str(session_id))
-    #     if current_data_length < data_length:
-    #         new_data = await redis.lrange(str(session_id), -1*NUM_READINGS, -1)
-    #     new_length = len(new_data)
-    #     if new_length > 0 or current_data_length < data_length:
-    #         data_length = current_data_length
-    #         # print(new_length)
-    #         print(new_data[0])
-    #         new_data = data_to_numpy(new_data)
-    #         data = np.vstack((data, new_data))
-    #         data = data[-1*NUM_READINGS:]
-    #         print(data[-1])
-    #         baseline_rms = real_time_rms(data) * rms_frac + (1-rms_frac) * baseline_rms
-    #         # TODO run inference
-    #         # try:
-    #         result = 'Rest'
-    #         print('RMS', baseline_rms, real_time_rms(data))
-    #         if real_time_rms(data) > 1.1 * baseline_rms or True:
-    #             inference = make_prediction(model, data)
-    #             print(inference.numpy()[0])
-    #             if tf.reduce_max(inference).numpy() > 0.99:
-    #                 max_index = np.argmax(inference.numpy()[0])
-    #                 result = gestures[max_index].name
-
-    #         # except:
-    #         #     count += 1
-    #         #     inference = f"NA {count}"
-
-    #         await websocket.send_text(json.dumps({
-    #             "inference":result,
-    #         }))
-    #         await asyncio.sleep(0.05)

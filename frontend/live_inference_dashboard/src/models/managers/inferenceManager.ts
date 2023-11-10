@@ -1,7 +1,7 @@
 import { getRecoil, setRecoil } from "recoil-nexus";
 import { RecordingStreamingService, StreamInfoService } from "../../clients/inference";
 
-import { activeAtom, authAtom, inferenceMessageAtom } from "../atoms/apiAtoms";
+import { activeAtom, authAtom, channelCountAtom, channelFrequencyAtom, inferenceMessageAtom } from "../atoms/apiAtoms";
 import { inferenceConnectionAtom } from "../atoms/UIAtoms";
 
 
@@ -23,6 +23,16 @@ export default {
     stream_active: async function (session_id : string) {
         const active = await StreamInfoService.getStreamActiveStreamActiveStreamIdGet(session_id);
         setRecoil(activeAtom, active);
+    },
+
+    stream_count: async function (session_id: string) {
+        const count = await StreamInfoService.getStreamChannelCountStreamChannelCountStreamIdGet(session_id);
+        setRecoil(channelCountAtom, count);
+    },
+
+    stream_frequency: async function (session_id: string) {
+        const frequency = await StreamInfoService.getStreamFrequencyStreamFrequencyStreamIdGet(session_id);
+        setRecoil(channelFrequencyAtom, frequency);
     },
 
     connect: async (modelID: string, streamID: string, modelName: string)=> {

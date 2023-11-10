@@ -1,7 +1,7 @@
 import React, { memo, useState } from "react";
 import { useRecoilValue, useRecoilState } from "recoil";
 import { authAtom } from "../models/atoms/apiAtoms";
-import {loginPageUIAtom} from "../models/atoms/UIAtoms";
+import { loginPageUIAtom } from "../models/atoms/UIAtoms";
 import { StyleSheet, css } from 'aphrodite';
 
 import {
@@ -122,49 +122,52 @@ export const LoginPage = memo(props => {
 
 
     return <>
-    <div className={css(login_page_styles.background)} style={{display:'flex'}}>
-        <Form className={css(login_page_styles.form_styles)} style={{margin:'auto', paddingBottom: 200}}>
-            <FormGroup>
-                <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"></Input>
-                <Input className={css(login_page_styles.form_items)} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="password"
-                    onKeyPress={e => {
-                        if (e.key == 'Enter') {
-                            handleLogin();
-                        }
-                    }}></Input>
+        <div className={css(login_page_styles.background)} style={{ display: 'flex' }}>
+            <Form className={css(login_page_styles.form_styles)} style={{ margin: 'auto', paddingBottom: 200 }}>
+                <div style={{ width: '100%', justifyContent: 'center', alignItems: 'center', display: 'flex', marginBottom:30}}>
+                    <img src="/logo.png" style={{ marginLeft: 'auto', marginRight: 'auto', marginTop: 30, width: 200, height: 160 }}></img>
+                </div>
+                <FormGroup>
+                    <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"></Input>
+                    <Input className={css(login_page_styles.form_items)} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="password"
+                        onKeyPress={e => {
+                            if (e.key == 'Enter') {
+                                handleLogin();
+                            }
+                        }}></Input>
+                    <Row className={css(login_page_styles.row_style)}>
+                        {/* <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(true)}>Forgot Password</Button> */}
+                    </Row>
+                </FormGroup>
                 <Row className={css(login_page_styles.row_style)}>
-                    {/* <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(true)}>Forgot Password</Button> */}
+                    {loginPageUIAtomState.incorrectPassword ? <>
+                        <p className={css(login_page_styles.invalid_credentials_style)}>Invalid Credentials</p>
+                    </> : <></>}
                 </Row>
-            </FormGroup>
-            <Row className={css(login_page_styles.row_style)}>
-                {loginPageUIAtomState.incorrectPassword ? <>
-                    <p className={css(login_page_styles.invalid_credentials_style)}>Invalid Credentials</p>
-                </> : <></>}
-            </Row>
-            <Row className={css(login_page_styles.row_style)}>
-                <Button id="login_button" className={css(login_page_styles.create_new_style)} onClick={login}>Login</Button>
-            </Row>
-            {model == false ? null :
-                <Form className={css(login_page_styles.forget_password_form)} >
-                    <FormGroup>
-                        <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"
-                            onKeyPress={e => {
-                                if (e.key == 'Enter') {
-                                    handleEmail();
-                                }
-                            }}></Input>
-                        <Row className={css(login_page_styles.row_style)}>
-                            <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(false)}>Return to login</Button>
-                        </Row>
-                        <Row id="email_button" className={css(login_page_styles.row_style)}>
-                            <Button className={css(login_page_styles.create_new_style)} onClick={() => {
-                                // TODO reset password
-                            }}>Send me an email to reset password</Button>
-                        </Row>
-                    </FormGroup>
-                </Form>
-            }
-        </Form>
+                <Row className={css(login_page_styles.row_style)}>
+                    <Button id="login_button" className={css(login_page_styles.create_new_style)} onClick={login}>Login</Button>
+                </Row>
+                {model == false ? null :
+                    <Form className={css(login_page_styles.forget_password_form)} >
+                        <FormGroup>
+                            <Input className={css(login_page_styles.form_items)} value={email} onChange={(event) => setEmail(event.target.value)} placeholder="email"
+                                onKeyPress={e => {
+                                    if (e.key == 'Enter') {
+                                        handleEmail();
+                                    }
+                                }}></Input>
+                            <Row className={css(login_page_styles.row_style)}>
+                                <Button className={css(login_page_styles.forget_password)} onClick={() => setModel(false)}>Return to login</Button>
+                            </Row>
+                            <Row id="email_button" className={css(login_page_styles.row_style)}>
+                                <Button className={css(login_page_styles.create_new_style)} onClick={() => {
+                                    // TODO reset password
+                                }}>Send me an email to reset password</Button>
+                            </Row>
+                        </FormGroup>
+                    </Form>
+                }
+            </Form>
         </div>
     </>
 });

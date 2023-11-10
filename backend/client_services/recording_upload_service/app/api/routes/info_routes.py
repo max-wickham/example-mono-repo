@@ -69,7 +69,7 @@ async def delete_gesture_recordings(gesture_id: str, token_data: TokenData = Dep
         await mongo_account.save()
 
 @app.delete('/rest_recordings/{model_id}', tags=["GestureInfo"])
-async def delete_gesture_recordings(gesture_id: str, token_data: TokenData = Depends(token_authentication)):
+async def delete_rest_recordings(model_id: str, token_data: TokenData = Depends(token_authentication)):
     '''Upload a binary recording file of the sensor data'''
     mongo_account = await MongoAccount.get(PydanticObjectId(token_data.account_id))
     if mongo_account is None:

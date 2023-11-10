@@ -4,6 +4,7 @@ import sys; sys.path.insert(0,'/')
 import uuid
 import asyncio
 import json
+import os
 
 import boto3
 from celery import Celery
@@ -21,7 +22,7 @@ from configs.commons import Tasks
 
 from src.configs import environmentSettings
 
-EPOCH_NUMS = 200
+EPOCH_NUMS = 20
 
 
 #############  Configure S3
@@ -95,7 +96,7 @@ async def model_training(request: TrainModelRequest):
     account.models[request.training_model_id].training_state = TrainingState.IN_PROGRESS
     # account.models[request.training_model_id].model_location=str(uuid.uuid4())
     await account.save()
-    try:
+    if True:
         account = await MongoAccount.get(PydanticObjectId(request.account_id))
         if account is None:
             raise Exception
@@ -113,10 +114,10 @@ async def model_training(request: TrainModelRequest):
         # set the status to complete
         account.models[request.training_model_id].training_state = TrainingState.COMPLETE
         await account.save()
-    except:
-        account = await MongoAccount.get(PydanticObjectId(request.account_id))
-        account.models[request.training_model_id].training_state = TrainingState.FAILED
-        await account.save()
+    # except:
+    #     account = await MongoAccount.get(PydanticObjectId(request.account_id))
+    #     account.models[request.training_model_id].training_state = TrainingState.FAILED
+    #     await account.save()
 
 @global_celery.task(name=Tasks.MODEL_TRAINING_TASK)
 def model_training_task(request: str):
@@ -147,6 +148,19 @@ async def load_data(mongo_account : MongoAccount, pre_trainined_model : MongoPre
             numpy_data = pickle.loads(body.read())
             data[str(gesture_id)].append(np.array(numpy_data))
 
+    if pre_trainined_model.has_rest_class:
+        if str(pre_trainined_model.id) in mongo_account.models:
+            locations = mongo_account.models[str(pre_trainined_model.id)].rest_data_file_locations
+        else:
+            locations = []
+        # locations = mongo_account.models[str(pre_trainined_model.id)].rest_data_file_locations
+        data[str(pre_trainined_model.id)] = []
+        for recording_filename in locations:
+            s3_object = s3.get_object(Bucket='recordings', Key=recording_filename)
+            body = s3_object['Body']
+            numpy_data = pickle.loads(body.read())
+            data[str(pre_trainined_model.id)].append(np.array(numpy_data))
+
     return data
 
 def label_data(data : dict):
@@ -161,8 +175,6 @@ def label_data(data : dict):
     x,y =   np.concatenate(x, axis=0), np.concatenate(y, axis=0)
     print(x.shape, y.shape)
     return x,y
-
-
 
 async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, account : MongoAccount) -> tf.keras.Model:
     '''
@@ -191,19 +203,17 @@ async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, a
             self.n_epochs = n_epochs
 
         async def on_epoch_end(self, epoch, logs=None):
-            if (epoch + 1) % self.n_epochs == 0:
-                print(f"Custom callback: Performing action at epoch {epoch + 1}")
-                pre_trainined_model.training_percentage = epoch / EPOCH_NUMS * 100
-                pre_trainined_model.save()
+            # if (epoch + 1) % self.n_epochs == 0:
+            print(f"Custom callback: Performing action at epoch {epoch + 1}")
+            pre_trainined_model.training_percentage = epoch / EPOCH_NUMS * 100
+            await pre_trainined_model.save()
 
-
+    custom_callback = CustomCallback(EPOCH_NUMS)
 
     history = model.fit(x_data, y_data, epochs=EPOCH_NUMS, batch_size=5, shuffle=True)
     return model
     # Load the model from the database
     # Fine tune the model on the x and y data
-
-
 
 async def upload_model_to_database(model: tf.keras.Model,account: MongoAccount,  model_id):
     '''Upload the trained model file to the database'''

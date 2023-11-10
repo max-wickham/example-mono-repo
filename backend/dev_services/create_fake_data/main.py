@@ -41,7 +41,7 @@ async def main():
     '''Entrypoint'''
     time.sleep(3)
     client = motor.motor_asyncio.AsyncIOMotorClient(
-        'mongodb://mongo:27017/')
+        os.environ['MONGO_DATABASE_URL'])
     client.drop_database('test')
     await init_beanie(
         database=client['test'], document_models=[
@@ -72,6 +72,8 @@ async def main():
 
         await mongo_gesture.save()
         gestures.append(mongo_gesture)
+
+
     mongo_gesture = MongoGestureInformation(
             name='Click',
             comments='comments',
@@ -93,7 +95,7 @@ async def main():
     await pre_made_model.save()
 
     pre_made_model = MongoPreMadeModel(
-        name = 'Penguin Model',
+        name = 'Penguin Game',
         gestures = [gesture.id for gesture in gestures[:2]],
         model_weights = 'penguin_model',
         sample_period_s=0.25
@@ -101,6 +103,102 @@ async def main():
 
     await pre_made_model.save()
 
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Mouse Rest',
+        gestures = [gesture.id for gesture in gestures],
+        model_weights = 'trackpad_rest',
+        sample_period_s=0.25,
+        has_rest_class=True,
+    )
+
+    await pre_made_model.save()
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Penguin Game Rest',
+        gestures = [gesture.id for gesture in gestures[:2]],
+        model_weights = 'penguin_rest',
+        sample_period_s=0.25,
+        has_rest_class=True,
+    )
+
+    await pre_made_model.save()
+
+
+    mongo_gesture = MongoGestureInformation(
+        name='Pinch',
+        comments='comments',
+        video_link='na',
+        photo_link='na',
+        continuous=True
+    )
+
+    await mongo_gesture.save()
+
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Pinch Model',
+        gestures = [mongo_gesture.id],
+        model_weights = 'pinch_rest_2000',
+        sample_period_s=1,
+        num_samples_per_recording=2000,
+        has_rest_class=True,
+    )
+
+    await pre_made_model.save()
+
+
+    #########################################
+
+    gestures = []
+    gesture_name = ['Hold Right 116','Hold Left 16','Hold Up 16','Hold Down 16']
+    for name in gesture_name:
+        mongo_gesture = MongoGestureInformation(
+            name=name,
+            comments='comments',
+            video_link='na',
+            photo_link='na',
+            continuous=True,
+            num_channels=16,
+        )
+
+        await mongo_gesture.save()
+        gestures.append(mongo_gesture)
+
+
+    mongo_gesture = MongoGestureInformation(
+            name='Click 16',
+            comments='comments',
+            video_link='na',
+            photo_link='na',
+            continuous=False,
+            num_channels=16,
+        )
+
+    await mongo_gesture.save()
+    gestures.append(mongo_gesture)
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Penguin Game 16',
+        gestures = [gesture.id for gesture in gestures[:2]],
+        model_weights = 'penguin_16',
+        sample_period_s=0.25,
+        has_rest_class=True,
+        num_channels=16,
+    )
+
+    await pre_made_model.save()
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Mouse 16',
+        gestures = [gesture.id for gesture in gestures],
+        model_weights = 'trackpad_16',
+        sample_period_s=0.25,
+        has_rest_class=True,
+        num_channels=16,
+    )
+
+    await pre_made_model.save()
 
     # gestures = []
     # gesture_name = ['Swipe Right', 'Swipe Left']
@@ -240,11 +338,11 @@ async def main():
     # data = read_from_pickle('/X_test.pkl')
     # print(data.shape)
 
-    # NUM_FEATURES = 8
-    # FREQUENCY = 2000
-    # MAX_LENGTH = 100000
-    # SESSION_ID = 201326592
-    # BYTES_PER_INT = 3
+    NUM_FEATURES = 16
+    FREQUENCY = 1000
+    MAX_LENGTH = 100000
+    SESSION_ID = 201326592
+    BYTES_PER_INT = 3
 
     # await redis.delete(str(SESSION_ID))
     # while True:
@@ -258,6 +356,8 @@ async def main():
     #     base64_encoded = base64.b64encode(byte_array)
     #     base64_encoded_str = base64_encoded.decode('utf-8')
     #     await redis.lpush(str(SESSION_ID), base64_encoded_str)
+    #     await redis.set(f'{SESSION_ID}_CHANNEL_COUNT', NUM_FEATURES)
+    #     await redis.set(f'{SESSION_ID}_FREQUENCY_HZ', FREQUENCY)
     #     time.sleep(1 / FREQUENCY)
     #     length = await redis.llen(str(SESSION_ID))
     #     if length > MAX_LENGTH:

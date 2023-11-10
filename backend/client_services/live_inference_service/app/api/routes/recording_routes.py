@@ -80,4 +80,31 @@ async def get_save_rest_recording(session_id : str, model_id: str, token_data: T
 
 @app.get('/stream_active/{stream_id}', tags=["StreamInfo"], response_model=bool)
 async def get_stream_active(stream_id: str) -> bool:
-    return (await redis.object('idletime', stream_id)) < 1
+    try:
+        return (await redis.object('idletime', stream_id)) < 1
+    except:
+        return False
+
+@app.get('/stream_channel_count/{stream_id}', tags=["StreamInfo"], response_model=int)
+async def get_stream_channel_count(stream_id: str) -> int:
+    try:
+
+        result : int | None = await redis.get(f'{stream_id}_CHANNEL_COUNT')
+        if result is None:
+            return 0
+        else:
+            return result
+    except:
+        return 0
+
+@app.get('/stream_frequency/{stream_id}', tags=["StreamInfo"], response_model=int)
+async def get_stream_frequency(stream_id: str) -> int:
+    try:
+
+        result : int | None = await redis.get(f'{stream_id}_FREQUENCY_HZ')
+        if result is None:
+            return 0
+        else:
+            return result
+    except:
+        return 0

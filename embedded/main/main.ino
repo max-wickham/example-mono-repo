@@ -9,13 +9,15 @@ void setup()
 {
   Serial.begin(115200);
   streamController = new StreamController();
-  streamController->connect("Pixel", "asdfghjkl");
+  streamController->connect("4GEE-WiFi-5866-2.4GHz", "hWnqeViMi37t");
+  //streamController->connect("iPhone", "teo13579");
   adc.begin();
   adc.RESET();
   adc.STANDBY();
   for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
   {
-    adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001110); // Clock register (page 55 in datasheet)
+    adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001110); // Clock register (page 55 in datasheet) 2000
+    //adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001010); // Clock register (page 55 in datasheet) 
     // /*CLOCK REG SETTINGS
     //  * Bits 15-8: ADC Channel enable/disable
     //  * Bit 7: Crystal disable
@@ -43,9 +45,14 @@ void loop()
 {
   const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
   static int lastMeasurementTime = micros();
+  // if (!adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
+  // {
+  //   Serial.println("Warning");
+  // }
 
   if (adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
   {
+
     lastMeasurementTime = micros();
     streamController->addReading(adc.framePointer(), adc.frameSize());
     adc.newFrame();

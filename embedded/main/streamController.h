@@ -13,7 +13,7 @@
 // #include <WebSocketsClient.h>
 
 #define FRAME_SIZE (NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT * NUM_CONVERSIONS_PER_FRAME * NUM_ADS)
-#define MAX_READINGS FRAME_SIZE * 3
+#define MAX_READINGS FRAME_SIZE * 13 // best at 7?
 
 const std::string serverAddress = "138.68.161.150";
 const int serverPort = 8005;
@@ -67,7 +67,7 @@ class StreamController
             }
             l_this->streaming = false;
             if (l_this->writing){
-              Serial.println("Start Waiting for writing");
+              //Serial.println("Start Waiting for writing");
             }
             while (l_this->writing)
             {
@@ -140,7 +140,8 @@ public:
     void addReading(uint8_t* framePointer, size_t frameLength)
     {
         if (readingIndex == 0){
-            Serial.println("Start of buffer");
+            //
+            // Serial.println("Start of buffer");
         }
         // unsigned char *bytePtr = reinterpret_cast<unsigned char *>(&framePointer);
         //
@@ -160,6 +161,7 @@ public:
             }
             while (this->streaming)
             {
+              //Serial.println("Warning");
             }
             // Serial.println("End of streaming");
             writingBuffer = writingBuffer == readingBuffer1 ? readingBuffer2 : readingBuffer1;

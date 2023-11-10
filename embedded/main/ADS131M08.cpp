@@ -96,7 +96,7 @@ void ADS131M08::begin(void)
 
   ads_spi.begin(ADS131_SCK_PIN, ADS131_MISO_PIN, ADS131_MOSI_PIN, 0);
 
-  ads_spi.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE1));
+  ads_spi.beginTransaction(SPISettings(3000000, MSBFIRST, SPI_MODE1)); // best at 250?
 
   delay(20); // time for SPI setup
   hw_reset();
@@ -156,7 +156,7 @@ bool ADS131M08::frameReady(void) // return the frame ready flag
 {
   if (frame_Ready)
   {
-    Serial.println("Frame Ready");
+    //Serial.println("Frame Ready");
   }
   return frame_Ready;
 }

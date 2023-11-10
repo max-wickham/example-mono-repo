@@ -2,47 +2,40 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { PreMadeModelRequest } from '../models/PreMadeModelRequest';
+import type { GestureRequest } from '../models/GestureRequest';
+import type { Gestures } from '../models/Gestures';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
-export class ModelsService {
+export class GesturesService {
 
     /**
-     * Post Model
-     * @param modelId
-     * @returns any Successful Response
+     * Get Gestures
+     * Upload a binary recording file of the sensor data
+     * @returns Gestures Successful Response
      * @throws ApiError
      */
-    public static postModelModelModelIdPost(
-        modelId: string,
-    ): CancelablePromise<any> {
+    public static getGesturesGesturesGet(): CancelablePromise<Gestures> {
         return __request(OpenAPI, {
-            method: 'POST',
-            url: '/model/{model_id}',
-            path: {
-                'model_id': modelId,
-            },
-            errors: {
-                422: `Validation Error`,
-            },
+            method: 'GET',
+            url: '/gestures',
         });
     }
 
     /**
-     * Post Pre Made Model
+     * Post Gesture
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static postPreMadeModelPreMadeModelPost(
-        requestBody: PreMadeModelRequest,
+    public static postGestureGesturePost(
+        requestBody: GestureRequest,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/pre_made_model',
+            url: '/gesture',
             body: requestBody,
             mediaType: 'application/json',
             errors: {

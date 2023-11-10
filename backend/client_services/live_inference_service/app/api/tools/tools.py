@@ -25,7 +25,7 @@ import numpy as np
 
 
 NUM_BYTES_IN_INT = 3
-NUM_CHANNELS = 8
+NUM_CHANNELS = 16
 PACKET_SIZE_BYTES = NUM_BYTES_IN_INT * NUM_CHANNELS
 
 def data_to_numpy(data: list[str]):

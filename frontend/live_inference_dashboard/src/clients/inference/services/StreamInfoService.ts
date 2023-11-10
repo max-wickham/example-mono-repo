@@ -29,4 +29,46 @@ export class StreamInfoService {
         });
     }
 
+    /**
+     * Get Stream Channel Count
+     * @param streamId
+     * @returns number Successful Response
+     * @throws ApiError
+     */
+    public static getStreamChannelCountStreamChannelCountStreamIdGet(
+        streamId: string,
+    ): CancelablePromise<number> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/stream_channel_count/{stream_id}',
+            path: {
+                'stream_id': streamId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Get Stream Frequency
+     * @param streamId
+     * @returns number Successful Response
+     * @throws ApiError
+     */
+    public static getStreamFrequencyStreamFrequencyStreamIdGet(
+        streamId: string,
+    ): CancelablePromise<number> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/stream_frequency/{stream_id}',
+            path: {
+                'stream_id': streamId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
 }

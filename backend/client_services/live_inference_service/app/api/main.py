@@ -44,7 +44,7 @@ if environmentSettings.ENV == 'DEV':
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY
                       )
-    s3_resource = boto3.resource('s3',
+    s3_client = boto3.client('s3',
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY
@@ -55,7 +55,7 @@ else:
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY)
-    s3_resource = boto3.resource('s3',
+    s3_client = boto3.client('s3',
                       endpoint_url=environmentSettings.S3_URL,
                       aws_access_key_id=environmentSettings.S3_ID,
                       aws_secret_access_key=environmentSettings.S3_KEY

@@ -7,8 +7,8 @@ from redis.asyncio import from_url
 
 MAX_BUFFER_LENGTH = 200000
 BYTES_PER_INT = 3
-NUM_CHANNELS = 8
-PACKETS_SIZE = BYTES_PER_INT * NUM_CHANNELS
+# NUM_CHANNELS = 16
+# PACKETS_SIZE = BYTES_PER_INT * NUM_CHANNELS
 REDIS_URL = 'redis://redis'
 
 redis = from_url(REDIS_URL, decode_responses=True)
@@ -41,7 +41,13 @@ class UdpServerProtocol(asyncio.DatagramProtocol):
         message = data
         assert data[0] == 0xAA
         session_id = int.from_bytes(data[1:5], byteorder='big', signed=False)
-        raw_packets = data[5:]
+        num_channels = int.from_bytes(data[5:6], byteorder='big', signed=False)
+        frequency_hz = int.from_bytes(data[6:8], byteorder='big', signed=False)
+        PACKETS_SIZE = num_channels * BYTES_PER_INT
+        asyncio.ensure_future(redis.set(f'{session_id}_CHANNEL_COUNT', num_channels))
+        asyncio.ensure_future(redis.set(f'{session_id}_FREQUENCY_HZ', frequency_hz))
+        # PACKETS_SIZE = 16
+        raw_packets = data[8:]
         assert len(raw_packets) % PACKETS_SIZE == 0
         packets = []
         for i in range(0, len(raw_packets), PACKETS_SIZE):

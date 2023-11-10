@@ -15,8 +15,8 @@ services:
       - "8000:8080"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -41,8 +41,8 @@ services:
       - "8888:8888/udp"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -66,8 +66,8 @@ services:
       - "8006:8080"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -90,8 +90,8 @@ services:
       - "8001:8080"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -115,8 +115,8 @@ services:
       - "8002:8080"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -139,8 +139,8 @@ services:
       - "8003:8080"
     environment:
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -215,8 +215,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://localhost:8000/token
-      - MONGO_DATABASE_URL=mongodb://mongo:27017/
+      - TOKEN_URL=http://138.68.161.150:8000/token
+      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017
       - ENV=DEV
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_RESULT_BACKEND=redis://redis:6379
@@ -231,6 +231,9 @@ services:
     profiles: ["backendfull", "stream"]
     command: mongod --quiet --logpath /dev/null
     image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=asdbiuievbsvkb
     ports:
       - "27017:27017"
     networks:

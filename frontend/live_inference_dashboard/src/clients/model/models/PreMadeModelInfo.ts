@@ -17,5 +17,8 @@ export type PreMadeModelInfo = {
     gestures: Array<GestureInfo>;
     sample_period_s: number;
     num_rest_recordings: number;
+    sample_frequency_hz: number;
+    num_channels: number;
+    samples_per_inference: number;
 };
 

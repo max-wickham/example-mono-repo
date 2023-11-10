@@ -16,3 +16,5 @@ class MongoPreMadeModel(Document):
     sample_period_s : float = 0.5
     sample_number : int = 500
     sample_frequency_hz : int = 1000
+    has_rest_class : bool = False
+    num_channels : int = 8

@@ -41,4 +41,14 @@ export const preMadeModelsAtom = atom<PreMadeModels|null>({
 export const activeAtom = atom<boolean>({
     key: 'activeAtom',
     default: false
-})
+});
+
+export const channelCountAtom = atom<number>({
+    key: 'channelCountAtom',
+    default: 0,
+});
+
+export const channelFrequencyAtom = atom<number>({
+    key: 'channelFrequencyAtom',
+    default: 0,
+});

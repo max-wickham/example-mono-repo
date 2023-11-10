@@ -50,7 +50,7 @@ class StreamController
                 udp.beginPacket(serverAddress.c_str(), 8888);
                 udp.write(0xAA);
                 udp.write((uint8_t *)(&sessionID), 4);
-                udp.write(0x0);
+                udp.write(0x00);
                 udp.write(static_cast<unsigned char>(NUM_CHANNELS_PER_ADS*NUM_ADS));
                 // Send the data
                 udp.write(l_this->streamingBuffer,MAX_READINGS);

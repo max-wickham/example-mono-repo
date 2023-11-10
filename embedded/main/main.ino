@@ -17,7 +17,7 @@ void setup()
   for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
   {
     adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001110); // Clock register (page 55 in datasheet) 2000
-    //adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001010); // Clock register (page 55 in datasheet) 
+    //adc.writeReg(adsIndex, ADS131_CLOCK, 0b1111111100001010); // Clock register (page 55 in datasheet)
     // /*CLOCK REG SETTINGS
     //  * Bits 15-8: ADC Channel enable/disable
     //  * Bit 7: Crystal disable
@@ -43,7 +43,8 @@ void setup()
 uint8_t maxReading = 0;
 void loop()
 {
-  const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
+  const unsigned int measurementPeriod_us = 1000000 * NUM_CONVERSIONS_PER_FRAME / SAMPLE_FREQUENCY_HZ
+  // const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
   static int lastMeasurementTime = micros();
   // if (!adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))
   // {

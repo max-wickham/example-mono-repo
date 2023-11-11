@@ -11,10 +11,10 @@
    Written by Imperial College London Rocketry
    Electronics subteam
 */
-
 #include <Arduino.h>
 #include <SPI.h>
 #include <initializer_list>
+#include "Configs.h"
 
 #define ADS131_CMD_NULL 0x0000
 #define ADS131_CMD_RESET 0x0011
@@ -78,13 +78,6 @@
 
 #define ADS131_REGMAP_CRC 0x3E
 #define ADS131_RESERVED 0x3F
-
-// #define OPEN_BCI // Remove if not using the OpenBCI protocol
-#define SAMPLE_FREQUENCY_HZ 2000
-#define NUM_ADS 2
-#define NUM_CONVERSIONS_PER_FRAME 1
-#define NUM_CHANNELS_PER_ADS 8
-#define NUM_BYTES_PER_INT 3
 
 #ifdef OPEN_BCI
 #define DATA_BYTES_PER_CONVERSION (NUM_CHANNELS_PER_ADS * NUM_BYTES_PER_INT * NUM_ADS + 9) // add the OpenBCI protocol bytes

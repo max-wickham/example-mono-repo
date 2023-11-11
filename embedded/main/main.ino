@@ -1,6 +1,7 @@
 #include "streamController.h"
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
+#include "Configs.h"
 
 StreamController *streamController;
 ADS131M08 adc;

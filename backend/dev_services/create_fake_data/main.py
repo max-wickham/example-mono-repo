@@ -200,6 +200,38 @@ async def main():
 
     await pre_made_model.save()
 
+
+    #############################
+
+    gestures = []
+    gesture_name = ['Hold Right 16 2K','Hold Left 16 2K','Hold Up 16 2K','Hold Down 16 2K']
+    for name in gesture_name:
+        mongo_gesture = MongoGestureInformation(
+            name=name,
+            comments='comments',
+            video_link='na',
+            photo_link='na',
+            continuous=True,
+            num_channels=16,
+            sampling_frequency_hz=2000,
+        )
+
+        await mongo_gesture.save()
+        gestures.append(mongo_gesture)
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Penguin Game 16 2000',
+        gestures = [gesture.id for gesture in gestures[:2]],
+        model_weights = 'penguin_16',
+        sample_period_s=0.25,
+        sample_number= 500,
+        has_rest_class=True,
+        sample_frequency_hz=2000,
+        num_channels=16,
+    )
+
+    await pre_made_model.save()
+
     # gestures = []
     # gesture_name = ['Swipe Right', 'Swipe Left']
     # for name in gesture_name:

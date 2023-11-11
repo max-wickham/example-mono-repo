@@ -1,6 +1,7 @@
 
 #include "ADS131M08.h"
 #include "ADS131ESP.h"
+#include "Configs.h"
 
 #define loop_ads for (int adsIndex = 0; adsIndex < NUM_ADS; adsIndex++)
 

@@ -6,6 +6,7 @@
 #include <BLEServer.h>
 #include <EEPROM.h>
 #include <unordered_map>
+#include "Configs.h"
 
 // Server Characteristics
 #define SERVER_SERVICE "b9908bbc-de94-42fb-952a-b4593d12ebd1"

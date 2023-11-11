@@ -20,7 +20,7 @@ build-data-stream:
 
 
 run-backend:
-	docker compose -f docker-compose.yml --profile "backendfull" up --force-recreate
+	sudo docker compose -f docker-compose.yml --profile "backendfull" up --force-recreate
 stop-backend:
 	docker compose -f docker-compose.yml --profile "backendfull" down
 build-backend:

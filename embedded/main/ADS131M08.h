@@ -80,7 +80,6 @@
 #define ADS131_RESERVED 0x3F
 
 // #define OPEN_BCI // Remove if not using the OpenBCI protocol
-
 #define SAMPLE_FREQUENCY_HZ 2000
 #define NUM_ADS 2
 #define NUM_CONVERSIONS_PER_FRAME 1

@@ -43,7 +43,7 @@ void setup()
 uint8_t maxReading = 0;
 void loop()
 {
-  const unsigned int measurementPeriod_us = 1000000 * NUM_CONVERSIONS_PER_FRAME / SAMPLE_FREQUENCY_HZ
+  const unsigned int measurementPeriod_us = 1000000 * NUM_CONVERSIONS_PER_FRAME / SAMPLE_FREQUENCY_HZ;
   // const int measurementPeriod_us = 500 * NUM_CONVERSIONS_PER_FRAME;
   static int lastMeasurementTime = micros();
   // if (!adc.frameReady() & (micros() - lastMeasurementTime > measurementPeriod_us))

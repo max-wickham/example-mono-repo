@@ -11,11 +11,12 @@ export default {
 
     login: async (email: string, password: string, callback = async () => {}) => {
         // try{
+            // const ip = "138.68.161.150";
             const ip = "138.68.161.150";
-            OpenAPIAuth.BASE = 'http://138.68.161.150:8000';
-            OpenAPIRecording.BASE = 'http://138.68.161.150:8001';
-            OpenAPIModel.BASE = 'http://138.68.161.150:8002';
-            OpenAPIInference.BASE =  'http://138.68.161.150:8006';
+            OpenAPIAuth.BASE = `http://${ip}:8000`;
+            OpenAPIRecording.BASE = `http://${ip}:8001`;
+            OpenAPIModel.BASE = `http://${ip}:8002`;
+            OpenAPIInference.BASE =  `http://${ip}:8006`;
             console.log('Logging in')
             const response = TokenService.getTokenTokenPost({
                 username: email,

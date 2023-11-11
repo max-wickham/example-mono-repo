@@ -49,7 +49,7 @@ async def custom_swagger_ui_html(req):
 @app.on_event("startup")
 async def app_init():
     '''App start up code'''
-    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)
+    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.MONGO_DATABASE_URL)
     # if environmentSettings.ENV == 'DEV':
     #     await client.drop_database('test')
     await init_beanie(

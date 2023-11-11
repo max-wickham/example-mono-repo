@@ -68,7 +68,7 @@ global_celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
 
 async def configure_beanie():
     '''Setup the database connection'''
-    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.mongo_database_url)
+    client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.MONGO_DATABASE_URL)
     await init_beanie(
         database=client['test']
         if environmentSettings.ENV == 'DEV'

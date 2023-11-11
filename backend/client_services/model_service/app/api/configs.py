@@ -9,7 +9,7 @@ class EnvironmentSettings(BaseSettings):
     jwt_algorithm : str = "HS256"
     jwt_exp : int = 2*7*24*60*60
     token_url="http://138.68.161.150:8002/token"
-    mongo_database_url : str = 'mongodb://localhost:27017/'
+    MONGO_DATABASE_URL : str = 'mongodb://localhost:27017/'
     api_url : str = 'http://localhost:8000'
     ENV : str = ""
     S3_REGION : str = "ams3"

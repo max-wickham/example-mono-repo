@@ -12,6 +12,8 @@
 #include "ADS131M08.h"
 #include "Configs.h"
 
+//#define HOTSPOT
+
 // #include <WebServer.h> // WebServer Library for ESP32
 // #include <WebSocketsClient.h>
 
@@ -35,6 +37,7 @@ uint32_t sessionID = 12;
 // Replace with your network credentials
 const char *ssid = "ESP32-Access-Point";
 const char *password = "123456789";
+
 
 
 class StreamController
@@ -118,9 +121,11 @@ public:
         IPAddress staticIP(192, 168, 4, 2); // Change this to the desired IP address
         IPAddress gateway(192, 168, 4, 1);  // Change this to your gateway IP address
         IPAddress subnet(255, 255, 255, 0); // Change this to your subnet mask
-        WiFi.softAP(ssid, password);
+
+        // CHANGED: REMOVED TO FIX ERROR 
+        /*WiFi.softAP(ssid, password);
         dhcpServer.start(192, 168, 4, 1, 600);  // Set the DHCP range appropriately
-        dhcpServer.addIP(staticIP);
+        dhcpServer.addIP(staticIP);*/
 #endif
         // webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
 

@@ -11,8 +11,8 @@ export default {
 
     login: async (email: string, password: string, callback = async () => {}) => {
         // try{
-            // const ip = "138.68.161.150";
-            const ip = "localhost";
+            const ip = "138.68.161.150";
+            // const ip = "localhost";
             OpenAPIAuth.BASE = `http://${ip}:8000`;
             OpenAPIRecording.BASE = `http://${ip}:8001`;
             OpenAPIModel.BASE = `http://${ip}:8002`;

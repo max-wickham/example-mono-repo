@@ -21,7 +21,8 @@
 #define MAX_READINGS FRAME_SIZE * 13 // best at 7?
 
 #ifndef HOTSPOT
-const std::string serverAddress = "138.68.161.150";
+// const std::string serverAddress = "138.68.161.150";
+const std::string serverAddress = "172.20.10.12";
 #else
 const std::string serverAddress = "192.168.4.2";
 #endif
@@ -35,8 +36,8 @@ WiFiUDP udp;
 uint32_t sessionID = 12;
 
 // Replace with your network credentials
-const char *ssid = "ESP32-Access-Point";
-const char *password = "123456789";
+// const char *ssid = "ESP32-Access-Point";
+// const char *password = "123456789";
 
 
 
@@ -118,14 +119,15 @@ public:
 #else
 
         // Set the static IP address for the first connected device
-        IPAddress staticIP(192, 168, 4, 2); // Change this to the desired IP address
-        IPAddress gateway(192, 168, 4, 1);  // Change this to your gateway IP address
-        IPAddress subnet(255, 255, 255, 0); // Change this to your subnet mask
+        // IPAddress staticIP(192, 168, 4, 2); // Change this to the desired IP address
+        // IPAddress gateway(192, 168, 4, 1);  // Change this to your gateway IP address
+        // IPAddress subnet(255, 255, 255, 0); // Change this to your subnet mask
 
         // CHANGED: REMOVED TO FIX ERROR 
-        /*WiFi.softAP(ssid, password);
-        dhcpServer.start(192, 168, 4, 1, 600);  // Set the DHCP range appropriately
-        dhcpServer.addIP(staticIP);*/
+        // WiFi.mode(WIFI_AP);
+        // WiFi.softAP("mindfeed", "password");
+        // IPAddress staticIP(192, 168, 1, 2); // Set the desired static IP address
+        // WiFi.softAPConfig(staticIP, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 #endif
         // webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
 

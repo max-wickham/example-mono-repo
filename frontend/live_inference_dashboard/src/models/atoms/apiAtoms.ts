@@ -4,7 +4,7 @@ Atoms relating to state taken via the backend api
 
 import { atom } from "recoil";
 import { PreMadeModelInfo, PreMadeModels } from "../../clients/model";
-import { Gestures } from "../../clients/recording";
+import { Gestures } from "../../clients/model";
 
 
 export const authAtom = atom<{

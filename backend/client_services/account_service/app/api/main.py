@@ -50,22 +50,11 @@ async def custom_swagger_ui_html(req):
 async def app_init():
     '''App start up code'''
     client = motor.motor_asyncio.AsyncIOMotorClient(environmentSettings.MONGO_DATABASE_URL)
-    # if environmentSettings.ENV == 'DEV':
-    #     await client.drop_database('test')
     await init_beanie(
         database=client['test']
         if environmentSettings.ENV == 'DEV'
         else client['main'],
         document_models=[MongoAccount])
-    # if environmentSettings.ENV == 'DEV':
-    #     from app.api.authentication.authentication import get_password_hash
-    #     mongo_account = MongoAccount(
-    #         name = 'test',
-    #         email='test',
-    #         password_hash=get_password_hash('test')
-    #     )
-    #     await mongo_account.save()
-
 
 # import routes
 

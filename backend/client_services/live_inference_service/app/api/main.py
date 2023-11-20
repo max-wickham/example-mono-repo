@@ -22,8 +22,6 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost",
-    "https://dashboard-deploy-h3gpr.ondigitalocean.app",
     "http://localhost:3000",
     "*"
 ]

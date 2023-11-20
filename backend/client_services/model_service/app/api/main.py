@@ -15,7 +15,6 @@ from configs.commons import Tasks
 
 from app.api.configs import Config, environmentSettings
 
-
 app = FastAPI(
     title=Config.application_name
 )
@@ -59,10 +58,16 @@ except Exception:
 
 # Set up Celery
 
+celery = Celery(Config.application_name)
+celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
+celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
+
+
 global_celery = Celery(Tasks.GLOBAL_CELERY_SERVICE)
 global_celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
 global_celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
 
+from app.api.routes.tasks import *
 
 @app.get('/')
 def docs():
@@ -91,5 +96,5 @@ async def app_init():
 
 
 # import routes
-# from app.api.routes.model_routes import *
 from app.api.routes.pre_made_model_routes import *
+from app.api.routes.gesture_routes import *

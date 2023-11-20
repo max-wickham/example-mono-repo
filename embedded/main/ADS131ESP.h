@@ -60,13 +60,14 @@
 #define ADS131_RESET_PINS     {17, 5}
 #define ADS131_DRDY_PINS      {26, 25}
 
-//#define ADS131_SELECT_PINS    {15}
-//#define ADS131_RESET_PINS     {5}
-//#define ADS131_DRDY_PINS      {25}
 
-//#define ADS131_SELECT_PINS    {15}
-//#define ADS131_RESET_PINS     {17}
-//#define ADS131_DRDY_PINS      {25}
+// #define ADS131_SELECT_PINS    {15}
+// #define ADS131_RESET_PINS     {5}
+// #define ADS131_DRDY_PINS      {25}
+
+/*#define ADS131_SELECT_PINS    {15}
+#define ADS131_RESET_PINS     {17}
+#define ADS131_DRDY_PINS      {25}*/
 
 #define ADS131_RESET_PULSE 1
 #define ADS131_RESET_DELAY 1

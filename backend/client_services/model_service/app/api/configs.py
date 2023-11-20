@@ -25,3 +25,7 @@ class Config:
     '''None secret configs'''
     application_name : str = "model-service"
     version = "0.0.1"
+
+class Tasks:
+    '''List of internal tasks'''
+    DELETE_RECORDINGS_TASK = "delete_recordings_task"

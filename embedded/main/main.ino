@@ -10,8 +10,8 @@ void setup()
 {
   Serial.begin(115200);
   streamController = new StreamController();
-  streamController->connect("4GEE-WiFi-5866-2.4GHz", "hWnqeViMi37t");
-  //streamController->connect("iPhone", "teo13579");
+  //streamController->connect("4GEE-WiFi-5866-2.4GHz", "hWnqeViMi37t");
+  streamController->connect("iPhone", "teo13579");
   adc.begin();
   adc.RESET();
   adc.STANDBY();

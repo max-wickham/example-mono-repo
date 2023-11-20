@@ -22,6 +22,8 @@ RUN apt-get update && \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m pip install -U celery[redis]
+
 RUN chmod +x entrypoint.sh
 
 CMD [ "./entrypoint.sh" ]

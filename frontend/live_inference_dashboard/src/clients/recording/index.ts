@@ -16,4 +16,5 @@ export type { ValidationError } from './models/ValidationError';
 
 export { DefaultService } from './services/DefaultService';
 export { GestureInfoService } from './services/GestureInfoService';
+export { GesturesService } from './services/GesturesService';
 export { RecordingUploadsService } from './services/RecordingUploadsService';

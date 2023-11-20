@@ -13,5 +13,7 @@ export type Gesture = {
     gesture_id: string;
     sample_frequency_hz: number;
     continuous: boolean;
+    num_channels: number;
+    num_samples: number;
 };
 

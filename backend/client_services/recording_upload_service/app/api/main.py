@@ -1,4 +1,6 @@
 '''App entry point'''
+import sys; sys.path.insert(0,'/')
+
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -11,6 +13,8 @@ import boto3
 from schemas.mongo_models.account_models import MongoAccount
 from schemas.mongo_models.gesture import MongoGestureInformation
 from schemas.mongo_models.pre_made_models import MongoPreMadeModel
+from configs.commons import Tasks
+
 from app.api.configs import Config, environmentSettings
 
 
@@ -33,9 +37,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-celery = Celery(__name__)
+celery = Celery(Config.application_name)
 celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
 celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
+
+# global_celery = Celery(__name__)
+# global_celery.conf.broker_url = environmentSettings.CELERY_BROKER_URL
+# global_celery.conf.result_backend = environmentSettings.CELERY_RESULT_BACKEND
 
 
 if environmentSettings.ENV == 'DEV':
@@ -100,3 +108,4 @@ async def app_init():
 
 from app.api.routes.upload_routes import *
 from app.api.routes.info_routes import *
+from app.api.routes.tasks import *

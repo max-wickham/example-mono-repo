@@ -42,7 +42,7 @@ async def main():
     time.sleep(3)
     client = motor.motor_asyncio.AsyncIOMotorClient(
         os.environ['MONGO_DATABASE_URL'])
-    client.drop_database('test')
+    # client.drop_database('test')
     await init_beanie(
         database=client['test'], document_models=[
             MongoGestureInformation,
@@ -50,187 +50,187 @@ async def main():
             MongoPreMadeModel
         ])
 
-    mongo_account = MongoAccount(
-        name='Matteo',
-        email='mtt.pzz56@gmail.com',
-        password_hash=pwd_context.hash('test'),
-        gestures={},
-        models={}
-    )
-    await mongo_account.save()
+    # mongo_account = MongoAccount(
+    #     name='Matteo',
+    #     email='mtt.pzz56@gmail.com',
+    #     password_hash=pwd_context.hash('test'),
+    #     gestures={},
+    #     models={}
+    # )
+    # await mongo_account.save()
 
-    gestures = []
-    gesture_name = ['Hold Right','Hold Left','Hold Up','Hold Down']
-    for name in gesture_name:
-        mongo_gesture = MongoGestureInformation(
-            name=name,
-            comments='comments',
-            video_link='na',
-            photo_link='na',
-            continuous=True
-        )
+    # gestures = []
+    # gesture_name = ['Hold Right','Hold Left','Hold Up','Hold Down']
+    # for name in gesture_name:
+    #     mongo_gesture = MongoGestureInformation(
+    #         name=name,
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=True
+    #     )
 
-        await mongo_gesture.save()
-        gestures.append(mongo_gesture)
-
-
-    mongo_gesture = MongoGestureInformation(
-            name='Click',
-            comments='comments',
-            video_link='na',
-            photo_link='na',
-            continuous=False
-        )
-
-    await mongo_gesture.save()
-    gestures.append(mongo_gesture)
-
-    pre_made_model = MongoPreMadeModel(
-        name = 'Mouse',
-        gestures = [gesture.id for gesture in gestures],
-        model_weights = 'mouse_model',
-        sample_period_s=0.25
-    )
-
-    await pre_made_model.save()
-
-    pre_made_model = MongoPreMadeModel(
-        name = 'Penguin Game',
-        gestures = [gesture.id for gesture in gestures[:2]],
-        model_weights = 'penguin_model',
-        sample_period_s=0.25
-    )
-
-    await pre_made_model.save()
+    #     await mongo_gesture.save()
+    #     gestures.append(mongo_gesture)
 
 
-    pre_made_model = MongoPreMadeModel(
-        name = 'Mouse Rest',
-        gestures = [gesture.id for gesture in gestures],
-        model_weights = 'trackpad_rest',
-        sample_period_s=0.25,
-        has_rest_class=True,
-    )
+    # mongo_gesture = MongoGestureInformation(
+    #         name='Click',
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=False
+    #     )
 
-    await pre_made_model.save()
+    # await mongo_gesture.save()
+    # gestures.append(mongo_gesture)
 
-    pre_made_model = MongoPreMadeModel(
-        name = 'Penguin Game Rest',
-        gestures = [gesture.id for gesture in gestures[:2]],
-        model_weights = 'penguin_rest',
-        sample_period_s=0.25,
-        has_rest_class=True,
-    )
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Mouse',
+    #     gestures = [gesture.id for gesture in gestures],
+    #     model_weights = 'mouse_model',
+    #     sample_period_s=0.25
+    # )
 
-    await pre_made_model.save()
+    # await pre_made_model.save()
 
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Penguin Game',
+    #     gestures = [gesture.id for gesture in gestures[:2]],
+    #     model_weights = 'penguin_model',
+    #     sample_period_s=0.25
+    # )
 
-    mongo_gesture = MongoGestureInformation(
-        name='Pinch',
-        comments='comments',
-        video_link='na',
-        photo_link='na',
-        continuous=True
-    )
-
-    await mongo_gesture.save()
+    # await pre_made_model.save()
 
 
-    pre_made_model = MongoPreMadeModel(
-        name = 'Pinch Model',
-        gestures = [mongo_gesture.id],
-        model_weights = 'pinch_rest_2000',
-        sample_period_s=1,
-        num_samples_per_recording=2000,
-        has_rest_class=True,
-    )
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Mouse Rest',
+    #     gestures = [gesture.id for gesture in gestures],
+    #     model_weights = 'trackpad_rest',
+    #     sample_period_s=0.25,
+    #     has_rest_class=True,
+    # )
 
-    await pre_made_model.save()
+    # await pre_made_model.save()
 
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Penguin Game Rest',
+    #     gestures = [gesture.id for gesture in gestures[:2]],
+    #     model_weights = 'penguin_rest',
+    #     sample_period_s=0.25,
+    #     has_rest_class=True,
+    # )
 
-    #########################################
-
-    gestures = []
-    gesture_name = ['Hold Right 116','Hold Left 16','Hold Up 16','Hold Down 16']
-    for name in gesture_name:
-        mongo_gesture = MongoGestureInformation(
-            name=name,
-            comments='comments',
-            video_link='na',
-            photo_link='na',
-            continuous=True,
-            num_channels=16,
-        )
-
-        await mongo_gesture.save()
-        gestures.append(mongo_gesture)
+    # await pre_made_model.save()
 
 
-    mongo_gesture = MongoGestureInformation(
-            name='Click 16',
-            comments='comments',
-            video_link='na',
-            photo_link='na',
-            continuous=False,
-            num_channels=16,
-        )
+    # mongo_gesture = MongoGestureInformation(
+    #     name='Pinch',
+    #     comments='comments',
+    #     video_link='na',
+    #     photo_link='na',
+    #     continuous=True
+    # )
 
-    await mongo_gesture.save()
-    gestures.append(mongo_gesture)
-
-    pre_made_model = MongoPreMadeModel(
-        name = 'Penguin Game 16',
-        gestures = [gesture.id for gesture in gestures[:2]],
-        model_weights = 'penguin_16',
-        sample_period_s=0.25,
-        has_rest_class=True,
-        num_channels=16,
-    )
-
-    await pre_made_model.save()
-
-    pre_made_model = MongoPreMadeModel(
-        name = 'Mouse 16',
-        gestures = [gesture.id for gesture in gestures],
-        model_weights = 'trackpad_16',
-        sample_period_s=0.25,
-        has_rest_class=True,
-        num_channels=16,
-    )
-
-    await pre_made_model.save()
+    # await mongo_gesture.save()
 
 
-    #############################
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Pinch Model',
+    #     gestures = [mongo_gesture.id],
+    #     model_weights = 'pinch_rest_2000',
+    #     sample_period_s=1,
+    #     num_samples_per_recording=2000,
+    #     has_rest_class=True,
+    # )
 
-    gestures = []
-    gesture_name = ['Hold Right 16 2K','Hold Left 16 2K','Hold Up 16 2K','Hold Down 16 2K']
-    for name in gesture_name:
-        mongo_gesture = MongoGestureInformation(
-            name=name,
-            comments='comments',
-            video_link='na',
-            photo_link='na',
-            continuous=True,
-            num_channels=16,
-            sampling_frequency_hz=2000,
-        )
+    # await pre_made_model.save()
 
-        await mongo_gesture.save()
-        gestures.append(mongo_gesture)
 
-    pre_made_model = MongoPreMadeModel(
-        name = 'Penguin Game 16 2000',
-        gestures = [gesture.id for gesture in gestures[:2]],
-        model_weights = 'penguin_16',
-        sample_period_s=0.25,
-        sample_number= 500,
-        has_rest_class=True,
-        sample_frequency_hz=2000,
-        num_channels=16,
-    )
+    # #########################################
 
-    await pre_made_model.save()
+    # gestures = []
+    # gesture_name = ['Hold Right 116','Hold Left 16','Hold Up 16','Hold Down 16']
+    # for name in gesture_name:
+    #     mongo_gesture = MongoGestureInformation(
+    #         name=name,
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=True,
+    #         num_channels=16,
+    #     )
+
+    #     await mongo_gesture.save()
+    #     gestures.append(mongo_gesture)
+
+
+    # mongo_gesture = MongoGestureInformation(
+    #         name='Click 16',
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=False,
+    #         num_channels=16,
+    #     )
+
+    # await mongo_gesture.save()
+    # gestures.append(mongo_gesture)
+
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Penguin Game 16',
+    #     gestures = [gesture.id for gesture in gestures[:2]],
+    #     model_weights = 'penguin_16',
+    #     sample_period_s=0.25,
+    #     has_rest_class=True,
+    #     num_channels=16,
+    # )
+
+    # await pre_made_model.save()
+
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Mouse 16',
+    #     gestures = [gesture.id for gesture in gestures],
+    #     model_weights = 'trackpad_16',
+    #     sample_period_s=0.25,
+    #     has_rest_class=True,
+    #     num_channels=16,
+    # )
+
+    # await pre_made_model.save()
+
+
+    # #############################
+
+    # gestures = []
+    # gesture_name = ['Hold Right 16 2K','Hold Left 16 2K','Hold Up 16 2K','Hold Down 16 2K']
+    # for name in gesture_name:
+    #     mongo_gesture = MongoGestureInformation(
+    #         name=name,
+    #         comments='comments',
+    #         video_link='na',
+    #         photo_link='na',
+    #         continuous=True,
+    #         num_channels=16,
+    #         sampling_frequency_hz=2000,
+    #     )
+
+    #     await mongo_gesture.save()
+    #     gestures.append(mongo_gesture)
+
+    # pre_made_model = MongoPreMadeModel(
+    #     name = 'Penguin Game 16 2000',
+    #     gestures = [gesture.id for gesture in gestures[:2]],
+    #     model_weights = 'penguin_16',
+    #     sample_period_s=0.25,
+    #     sample_number= 500,
+    #     has_rest_class=True,
+    #     sample_frequency_hz=2000,
+    #     num_channels=16,
+    # )
+
+    # await pre_made_model.save()
 
     # gestures = []
     # gesture_name = ['Swipe Right', 'Swipe Left']
@@ -326,6 +326,39 @@ async def main():
     #         s3.upload_file(local_file_path, bucket_name, s3_object_key)
 
 
+
+######################################
+
+    gestures = []
+    gesture_name = ['Left Finger 16 2K','Right Finger 16 2K']
+    for name in gesture_name:
+        mongo_gesture = MongoGestureInformation(
+            name=name,
+            comments='comments',
+            video_link='na',
+            photo_link='na',
+            continuous=True,
+            num_channels=16,
+            sampling_frequency_hz=2000,
+        )
+
+        await mongo_gesture.save()
+        gestures.append(mongo_gesture)
+
+    pre_made_model = MongoPreMadeModel(
+        name = 'Left Right Finger 16 2000',
+        gestures = [gesture.id for gesture in gestures[:2]],
+        model_weights = 'penguin_16',
+        sample_period_s=0.25,
+        sample_number= 500,
+        has_rest_class=True,
+        sample_frequency_hz=2000,
+        num_channels=16,
+    )
+
+    await pre_made_model.save()
+
+    ############################
 
 
 

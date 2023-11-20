@@ -96,7 +96,7 @@ async def model_training(request: TrainModelRequest):
     account.models[request.training_model_id].training_state = TrainingState.IN_PROGRESS
     # account.models[request.training_model_id].model_location=str(uuid.uuid4())
     await account.save()
-    if True:
+    try:
         account = await MongoAccount.get(PydanticObjectId(request.account_id))
         if account is None:
             raise Exception
@@ -114,10 +114,10 @@ async def model_training(request: TrainModelRequest):
         # set the status to complete
         account.models[request.training_model_id].training_state = TrainingState.COMPLETE
         await account.save()
-    # except:
-    #     account = await MongoAccount.get(PydanticObjectId(request.account_id))
-    #     account.models[request.training_model_id].training_state = TrainingState.FAILED
-    #     await account.save()
+    except:
+        account = await MongoAccount.get(PydanticObjectId(request.account_id))
+        account.models[request.training_model_id].training_state = TrainingState.FAILED
+        await account.save()
 
 @global_celery.task(name=Tasks.MODEL_TRAINING_TASK)
 def model_training_task(request: str):
@@ -210,7 +210,7 @@ async def train_model(x_data, y_data, pre_trainined_model : MongoPreMadeModel, a
 
     custom_callback = CustomCallback(EPOCH_NUMS)
 
-    history = model.fit(x_data, y_data, epochs=EPOCH_NUMS, batch_size=5, shuffle=True)
+    history = model.fit(x_data, y_data, epochs=20, batch_size=5, shuffle=True)
     return model
     # Load the model from the database
     # Fine tune the model on the x and y data

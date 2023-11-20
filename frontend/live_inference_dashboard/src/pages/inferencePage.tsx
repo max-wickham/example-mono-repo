@@ -149,7 +149,7 @@ const DeviceBar = memo(function () {
         <Row>
             <Col xs='auto'>
                 <Row className="justify-content-begin">
-                    <Col xs="auto"><CardText style={{ marginRight: 30, width: 400 }}><h4>Device ID: 124325413</h4></CardText></Col>
+                    <Col xs="auto"><CardText style={{ marginRight: 30, width: 400 }}><h4>Device ID: 124325</h4></CardText></Col>
                     <Col xs="auto"><Alert color="success" className={css(styles.small_alert)}>Wifi Connected</Alert></Col>
                     {
                         active ?
@@ -162,7 +162,7 @@ const DeviceBar = memo(function () {
 
             <Col>
                 <Row className="justify-content-end">
-                    <Col xs="auto"><Button color="primary" className={css(styles.button)}>Setup Wifi</Button></Col>
+                    <Col xs="auto"><Button color="primary" className={css(styles.button)}>Setup Wifi connection</Button></Col>
                     {/* <Col xs="auto"></Col> */}
                 </Row>
             </Col>

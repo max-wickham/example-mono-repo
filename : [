@@ -1,0 +1,49 @@
+[33mcommit 68a06c02e7eb5cc5afeb6c4cba42150d8473f409[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: max wickham <maxwickham@startmail.com>
+Date:   Mon Nov 13 19:14:01 2023 +0000
+
+    stuff
+
+[1mdiff --git a/backend/client_services/live_inference_service/app/api/data.pkl b/backend/client_services/live_inference_service/app/api/data.pkl[m
+[1mnew file mode 100644[m
+[1mindex 00000000..8d97f0a8[m
+Binary files /dev/null and b/backend/client_services/live_inference_service/app/api/data.pkl differ
+[1mdiff --git a/backend/client_services/training_service/src/__pycache__/configs.cpython-310.pyc b/backend/client_services/training_service/src/__pycache__/configs.cpython-310.pyc[m
+[1mindex 318360bb..1321e6c2 100644[m
+Binary files a/backend/client_services/training_service/src/__pycache__/configs.cpython-310.pyc and b/backend/client_services/training_service/src/__pycache__/configs.cpython-310.pyc differ
+[1mdiff --git a/backend/client_services/training_service/src/__pycache__/main.cpython-310.pyc b/backend/client_services/training_service/src/__pycache__/main.cpython-310.pyc[m
+[1mindex 1cc36cfa..0bb947ac 100644[m
+Binary files a/backend/client_services/training_service/src/__pycache__/main.cpython-310.pyc and b/backend/client_services/training_service/src/__pycache__/main.cpython-310.pyc differ
+[1mdiff --git a/backend/configs/__pycache__/commons.cpython-310.pyc b/backend/configs/__pycache__/commons.cpython-310.pyc[m
+[1mindex b7111eba..d7b9e447 100644[m
+Binary files a/backend/configs/__pycache__/commons.cpython-310.pyc and b/backend/configs/__pycache__/commons.cpython-310.pyc differ
+[1mdiff --git a/backend/libs/authentication/__pycache__/user_token_auth.cpython-310.pyc b/backend/libs/authentication/__pycache__/user_token_auth.cpython-310.pyc[m
+[1mindex c670a542..3cdaaeeb 100644[m
+Binary files a/backend/libs/authentication/__pycache__/user_token_auth.cpython-310.pyc and b/backend/libs/authentication/__pycache__/user_token_auth.cpython-310.pyc differ
+[1mdiff --git a/backend/schemas/mongo_models/__pycache__/account_models.cpython-310.pyc b/backend/schemas/mongo_models/__pycache__/account_models.cpython-310.pyc[m
+[1mindex d8887ce7..b18bcb83 100644[m
+Binary files a/backend/schemas/mongo_models/__pycache__/account_models.cpython-310.pyc and b/backend/schemas/mongo_models/__pycache__/account_models.cpython-310.pyc differ
+[1mdiff --git a/backend/schemas/mongo_models/__pycache__/gesture.cpython-310.pyc b/backend/schemas/mongo_models/__pycache__/gesture.cpython-310.pyc[m
+[1mindex 658f1876..71d6d02b 100644[m
+Binary files a/backend/schemas/mongo_models/__pycache__/gesture.cpython-310.pyc and b/backend/schemas/mongo_models/__pycache__/gesture.cpython-310.pyc differ
+[1mdiff --git a/backend/schemas/mongo_models/__pycache__/pre_made_models.cpython-310.pyc b/backend/schemas/mongo_models/__pycache__/pre_made_models.cpython-310.pyc[m
+[1mindex b8159aff..70c0f279 100644[m
+Binary files a/backend/schemas/mongo_models/__pycache__/pre_made_models.cpython-310.pyc and b/backend/schemas/mongo_models/__pycache__/pre_made_models.cpython-310.pyc differ
+[1mdiff --git a/backend/schemas/task_messages/__pycache__/model_training_task.cpython-310.pyc b/backend/schemas/task_messages/__pycache__/model_training_task.cpython-310.pyc[m
+[1mindex 721bb22b..11a9db2f 100644[m
+Binary files a/backend/schemas/task_messages/__pycache__/model_training_task.cpython-310.pyc and b/backend/schemas/task_messages/__pycache__/model_training_task.cpython-310.pyc differ
+[1mdiff --git a/frontend/live_inference_dashboard/src/models/managers/authManager.ts b/frontend/live_inference_dashboard/src/models/managers/authManager.ts[m
+[1mindex a2beaabb..1b32dc3d 100644[m
+[1m--- a/frontend/live_inference_dashboard/src/models/managers/authManager.ts[m
+[1m+++ b/frontend/live_inference_dashboard/src/models/managers/authManager.ts[m
+[36m@@ -11,8 +11,8 @@[m [mexport default {[m
+ [m
+     login: async (email: string, password: string, callback = async () => {}) => {[m
+         // try{[m
+[31m-            // const ip = "138.68.161.150";[m
+[31m-            const ip = "localhost";[m
+[32m+[m[32m            const ip = "138.68.161.150";[m
+[32m+[m[32m            // const ip = "localhost";[m
+             OpenAPIAuth.BASE = `http://${ip}:8000`;[m
+             OpenAPIRecording.BASE = `http://${ip}:8001`;[m
+             OpenAPIModel.BASE = `http://${ip}:8002`;[m

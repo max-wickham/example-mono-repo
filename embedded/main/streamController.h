@@ -115,12 +115,13 @@ public:
 #else
 
         // Set the static IP address for the first connected device
-        IPAddress staticIP(192, 168, 4, 2); // Change this to the desired IP address
-        IPAddress gateway(192, 168, 4, 1);  // Change this to your gateway IP address
-        IPAddress subnet(255, 255, 255, 0); // Change this to your subnet mask
+        // IPAddress staticIP(192, 168, 4, 2); // Change this to the desired IP address
+        // IPAddress gateway(192, 168, 4, 1);  // Change this to your gateway IP address
+        // IPAddress subnet(255, 255, 255, 0); // Change this to your subnet mask
+        WiFi.mode(WIFI_AP);
         WiFi.softAP(ssid, password);
-        dhcpServer.start(192, 168, 4, 1, 600);  // Set the DHCP range appropriately
-        dhcpServer.addIP(staticIP);
+        // dhcpServer.start(192, 168, 4, 1, 600);  // Set the DHCP range appropriately
+        // dhcpServer.addIP(staticIP);
 #endif
         // webSocket.begin(serverAddress.c_str(), serverPort, (route + std::to_string(sessionID)).c_str());
 

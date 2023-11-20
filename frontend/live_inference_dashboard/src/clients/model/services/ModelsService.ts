@@ -12,6 +12,7 @@ export class ModelsService {
 
     /**
      * Post Model
+     * Create a new user model from a model template
      * @param modelId
      * @returns any Successful Response
      * @throws ApiError
@@ -32,7 +33,30 @@ export class ModelsService {
     }
 
     /**
+     * Del Model
+     * Delete an existing model
+     * @param modelId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static delModelModelModelIdDelete(
+        modelId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/model/{model_id}',
+            path: {
+                'model_id': modelId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
      * Post Pre Made Model
+     * Create a new model template
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError

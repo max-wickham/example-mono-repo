@@ -11,3 +11,9 @@
 ## Add Multiple Model Recording
 
 ## Add Gesture Management
+
+
+
+
+- Combine Recording and Model Service
+- Make UI to create gestures and models easily

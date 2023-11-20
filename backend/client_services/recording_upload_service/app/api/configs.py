@@ -25,3 +25,8 @@ class Config:
     '''None secret configs'''
     application_name : str = "recording-upload-service"
     version = "0.0.1"
+
+class Tasks:
+    '''Local Application tasks'''
+    DELETE_USER_RECORDINGS = 'delete_user_recordings_task'
+    DELETE_USER_REST_RECORDINGS = 'delete_user_rest_recordings_task'

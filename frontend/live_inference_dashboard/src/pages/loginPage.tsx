@@ -13,6 +13,7 @@ import {
 } from "reactstrap";
 import authManager from "../models/managers/authManager";
 import recordingsManager from "../models/managers/recordingsManager";
+import modelsManager from "../models/managers/modelsManager";
 
 export const login_page_styles = StyleSheet.create({
     form_styles: {
@@ -114,7 +115,7 @@ export const LoginPage = memo(props => {
 
     const login = () => {
         authManager.login(email, password, async () => {
-            await recordingsManager.getGestures();
+            await modelsManager.getGestures();
         });
     }
 

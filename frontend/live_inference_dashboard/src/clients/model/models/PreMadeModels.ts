@@ -5,6 +5,9 @@
 
 import type { PreMadeModelInfo } from './PreMadeModelInfo';
 
+/**
+ * List of model templates
+ */
 export type PreMadeModels = {
     models: Array<PreMadeModelInfo>;
 };

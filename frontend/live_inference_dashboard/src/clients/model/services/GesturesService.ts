@@ -26,6 +26,7 @@ export class GesturesService {
 
     /**
      * Post Gesture
+     * Create a new gesture
      * @param requestBody
      * @returns any Successful Response
      * @throws ApiError
@@ -38,6 +39,28 @@ export class GesturesService {
             url: '/gesture',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Del Gesture
+     * Delete an existing gesture globally
+     * @param gestureId
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static delGestureGestureGestureIdDelete(
+        gestureId: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/gesture/{gesture_id}',
+            path: {
+                'gesture_id': gestureId,
+            },
             errors: {
                 422: `Validation Error`,
             },

@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-package ReadingMessage;
-
-message ReadingMessage {
-    required int32 deviceID = 1;
-    required int32 readingTime = 2;
-    repeated float readings = 3;
-}

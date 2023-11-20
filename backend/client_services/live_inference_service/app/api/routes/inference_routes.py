@@ -59,25 +59,29 @@ async def load_rest_data(mongo_account : MongoAccount, pre_trainined_model : Mon
 # TODO authentication
 @app.websocket("/inference/{session_id}/{model_id}/{email}/{password}")
 async def websocket_endpoint(websocket: WebSocket, session_id: int, model_id: str, email: str, password: str):
+    '''Inference Websocket'''
     await websocket.accept()
-    # TODO dependent on time between readings
+
     ########## Load Account Information
-    print(email)
-    mongo_account : MongoAccount | None = await MongoAccount.find(MongoAccount.email == email).first_or_none()
-    if mongo_account is None:
-        raise Exception
-    pre_trained_model : MongoPreMadeModel | None = await MongoPreMadeModel.get(PydanticObjectId(model_id))
-    if pre_trained_model is None:
-        raise Exception
-    gestures : list[MongoGestureInformation | None] = [await MongoGestureInformation.get(gesture_id) for gesture_id in pre_trained_model.gestures]
+    mongo_account : MongoAccount | None = await MongoAccount.find(
+        MongoAccount.email == email).first_or_none()
+    # TODO assert that the password is correct
+    assert mongo_account is not None
+
+    ########## Load Model Information
+    pre_trained_model : MongoPreMadeModel | None = await MongoPreMadeModel.get(
+        PydanticObjectId(model_id))
+    assert pre_trained_model is not None
+    gestures : list[MongoGestureInformation | None] = [
+        await MongoGestureInformation.get(gesture_id) for gesture_id in pre_trained_model.gestures]
     for gesture in gestures:
         assert gesture is not None
     model_info = mongo_account.models[model_id]
     assert model_info.training_state == TrainingState.COMPLETE
-
     num_readings_per_inference = pre_trained_model.sample_number
 
     ########## Download Model
+    # TODO use tmp library
     s3_folder = model_info.model_location
     bucket = s3.Bucket('models')
     local_dir = f'/tmp/{"".join(random.choices(string.ascii_uppercase + string.digits, k=10))}'

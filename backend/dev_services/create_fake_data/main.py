@@ -376,24 +376,24 @@ async def main():
     SESSION_ID = 201326592
     BYTES_PER_INT = 3
 
-    # await redis.delete(str(SESSION_ID))
-    # while True:
-    #     int_array = [int(i) for i in range(NUM_FEATURES)]
-    #     byte_array = bytearray()
-    #     # Iterate through the float values and pack them as float32 (4 bytes each)
-    #     for value in int_array:
-    #         packed_value = value.to_bytes(BYTES_PER_INT, byteorder='big', signed=True)
-    #         byte_array.extend(packed_value)
+    await redis.delete(str(SESSION_ID))
+    while True:
+        int_array = [int(i) for i in range(NUM_FEATURES)]
+        byte_array = bytearray()
+        # Iterate through the float values and pack them as float32 (4 bytes each)
+        for value in int_array:
+            packed_value = value.to_bytes(BYTES_PER_INT, byteorder='big', signed=True)
+            byte_array.extend(packed_value)
 
-    #     base64_encoded = base64.b64encode(byte_array)
-    #     base64_encoded_str = base64_encoded.decode('utf-8')
-    #     await redis.lpush(str(SESSION_ID), base64_encoded_str)
-    #     await redis.set(f'{SESSION_ID}_CHANNEL_COUNT', NUM_FEATURES)
-    #     await redis.set(f'{SESSION_ID}_FREQUENCY_HZ', FREQUENCY)
-    #     time.sleep(1 / FREQUENCY)
-    #     length = await redis.llen(str(SESSION_ID))
-    #     if length > MAX_LENGTH:
-    #         await redis.ltrim(str(SESSION_ID), int(length / 2), length)
+        base64_encoded = base64.b64encode(byte_array)
+        base64_encoded_str = base64_encoded.decode('utf-8')
+        await redis.lpush(str(SESSION_ID), base64_encoded_str)
+        await redis.set(f'{SESSION_ID}_CHANNEL_COUNT', NUM_FEATURES)
+        await redis.set(f'{SESSION_ID}_FREQUENCY_HZ', FREQUENCY)
+        time.sleep(1 / FREQUENCY)
+        length = await redis.llen(str(SESSION_ID))
+        if length > MAX_LENGTH:
+            await redis.ltrim(str(SESSION_ID), int(length / 2), length)
 
 
 

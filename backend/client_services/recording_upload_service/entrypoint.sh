@@ -2,10 +2,10 @@
 # run any setup code
 # ./scripts/setup
 # create the webserver
-if test -e ./sendgrid.env; then
-    source ./sendgrid.env
-fi
 
+ls
+
+python -m celery -A app.api worker --loglevel=INFO -Q recording-upload-service &
 
 if [ $ENV == "DEV" ]
 then

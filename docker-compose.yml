@@ -1,5 +1,35 @@
 version: "3.9" # optional since v1.27.0
+
+x-common-variables: &common-variables
+  JWT_SECRET: 09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
+  # - TOKEN_URL=http://138.68.161.150:8000/token
+  TOKEN_URL: http://localhost:8000/token
+  MONGO_DATABASE_URL: mongodb://admin:asdbiuievbsvkb@mongo:27017/
+  ENV: DEV
+  CELERY_BROKER_URL: redis://redis:6379
+  CELERY_RESULT_BACKEND: redis://redis:6379
+  REDIS_URL: redis://redis
+  PYTHONUNBUFFERED: 1
+
+
 services:
+
+  fake-data-gen:
+    profiles: ["backendfull", "stream"]
+    build:
+      context: .
+      dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
+    volumes:
+      - ./backend/dev_services/create_fake_data/main.py:/main.py
+      - ./backend/schemas:/schemas
+      - ./backend/libs:/libs
+      - ./model_saving:/model_saving
+    environment:
+      <<: *common-variables
+    networks:
+      - vpcbr
+    depends_on:
+      - account-service
 
   account-service:
     profiles: ["backendfull", "stream"]
@@ -14,13 +44,7 @@ services:
     ports:
       - "8000:8080"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
+      <<: *common-variables
     networks:
       - vpcbr
     depends_on:
@@ -42,14 +66,7 @@ services:
       - "8005:8080"
       - "8888:8888/udp"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
-      - PYTHONUNBUFFERED=1
+      <<: *common-variables
     networks:
       - vpcbr
 
@@ -67,14 +84,7 @@ services:
     ports:
       - "8006:8080"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
-      - PYTHONUNBUFFERED=1
+      <<: *common-variables
     networks:
       - vpcbr
 
@@ -85,19 +95,14 @@ services:
       dockerfile: backend/client_services/recording_upload_service/dev.Dockerfile
     volumes:
       - ./backend/client_services/recording_upload_service/app:/app
+      - ./backend/client_services/recording_upload_service/entrypoint.sh:/entrypoint.sh
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
       - ./backend/configs:/configs
     ports:
       - "8001:8080"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
+      <<: *common-variables
     networks:
       - vpcbr
   # TODO worker
@@ -110,19 +115,14 @@ services:
       dockerfile: backend/client_services/model_service/dev.Dockerfile
     volumes:
       - ./backend/client_services/model_service/app:/app
+      - ./backend/client_services/model_service/entrypoint.sh:/entrypoint.sh
       - ./backend/schemas:/schemas
       - ./backend/libs:/libs
       - ./backend/configs:/configs
     ports:
       - "8002:8080"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
+      <<: *common-variables
     networks:
       - vpcbr
 
@@ -140,66 +140,9 @@ services:
     ports:
       - "8003:8080"
     environment:
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017/
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
-      - PYTHONUNBUFFERED=1
+      <<: *common-variables
     networks:
       - vpcbr
-
-  # dev-dashboard:
-    # profiles: ["backendfull"]
-    # build:
-    #   context: ./frontend/dev_dashboard
-    #   dockerfile: dev.Dockerfile
-    # volumes:
-    #   - ./frontend/dev_dashboard/src:/app/src
-    #   - ./frontend/dev_dashboard/package.json:/app/package.json
-    # ports:
-    #   - "3000:3000"
-    # environment:
-    #   - secret=secret
-    #   - jwt_secret=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-    #   - token_url=http://localhost:8080/token
-    #   - mongo_database_url=mongodb://mongo:27017/
-    #   - ENV=DEV
-    #   - REDIS_URL=redis://redis
-    #   - API_KEY=test
-    #   - PYTHONUNBUFFERED=1
-    # networks:
-    #  - vpcbr
-    # depends_on:
-    #   - account-service
-    #   - recording-upload-service
-
-
-  fake-data-gen:
-    profiles: ["backendfull", "stream"]
-    build:
-      context: .
-      dockerfile: backend/dev_services/create_fake_data/dev.Dockerfile
-    volumes:
-      - ./backend/dev_services/create_fake_data/main.py:/main.py
-      - ./backend/schemas:/schemas
-      - ./backend/libs:/libs
-      - ./model_saving:/model_saving
-    environment:
-      - PYTHONUNBUFFERED=1
-      - JWT_SECRET=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7
-      - TOKEN_URL=http://138.68.161.150:8000/token
-      - MONGO_DATABASE_URL=mongodb://admin:asdbiuievbsvkb@mongo:27017
-      - ENV=DEV
-      - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_RESULT_BACKEND=redis://redis:6379
-      - REDIS_URL=redis://redis
-    networks:
-      - vpcbr
-    depends_on:
-      - account-service
 
 
   mongo:
@@ -248,5 +191,3 @@ networks:
      config:
        - subnet: 10.5.0.10/16
          gateway: 10.5.10.1
-        #  aux_addresses:
-        #   minio: 10.5.0.10

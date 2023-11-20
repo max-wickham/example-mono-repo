@@ -2,34 +2,28 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_post_recording_recording__gesture_id__post } from '../models/Body_post_recording_recording__gesture_id__post';
-
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
-export class RecordingUploadsService {
+export class GesturesService {
 
     /**
-     * Post Recording
-     * Upload a binary recording file of the sensor data
+     * Get Recording Files
+     * Returns back a zip file with all the recordings for the user and gesture
      * @param gestureId
-     * @param formData
      * @returns any Successful Response
      * @throws ApiError
      */
-    public static postRecordingRecordingGestureIdPost(
+    public static getRecordingFilesRecordingFilesGestureIdGet(
         gestureId: string,
-        formData: Body_post_recording_recording__gesture_id__post,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
-            method: 'POST',
-            url: '/recording/{gesture_id}',
+            method: 'GET',
+            url: '/recording_files/{gesture_id}',
             path: {
                 'gesture_id': gestureId,
             },
-            formData: formData,
-            mediaType: 'multipart/form-data',
             errors: {
                 422: `Validation Error`,
             },
